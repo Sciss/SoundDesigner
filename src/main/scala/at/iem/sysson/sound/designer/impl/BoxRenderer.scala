@@ -1,4 +1,7 @@
-package at.iem.sysson.sound.designer.impl
+package at.iem.sysson
+package sound
+package designer
+package impl
 
 import prefuse.render.{Renderer, AbstractShapeRenderer}
 import java.awt.geom.Rectangle2D
@@ -59,22 +62,17 @@ private[impl] final class BoxRenderer(d: DesignerViewImpl) extends AbstractShape
       g.fill(r)
       data.state match {
         case ElementState.Ok =>
-          g.setColor(strkColrOk)
-          g.setStroke(strkShpOk)
+          g.setColor (strkColrOk)
+          g.setStroke(strkShpOk )
         case ElementState.Edit =>
-          g.setColor(strkColrEdit)
-          g.setStroke(strkShpPend)
+          g.setColor (strkColrEdit)
+          g.setStroke(strkShpPend )
         case ElementState.Error =>
-          g.setColor(strkColrErr)
+          g.setColor (strkColrErr)
           g.setStroke(strkShpPend)
       }
       g.draw(r)
-      data.state match {
-        case ElementState.Edit =>
-          g.setColor(textColrEdit)
-        case _ =>
-          g.setColor(textColr)
-      }
+      g.setColor(if (data.state == ElementState.Edit) textColrEdit else textColr)
       g.setFont(Style.font)
       val fm  = Renderer.DEFAULT_GRAPHICS.getFontMetrics(Style.font)
       val x   = b.getX.toFloat

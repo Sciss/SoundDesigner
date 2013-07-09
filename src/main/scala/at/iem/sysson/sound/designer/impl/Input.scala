@@ -12,7 +12,7 @@ private[impl] final class GraphElem(val spec: UGenSpec, val rate: MaybeRate) ext
   var inputs: Vec[Option[Input]]  = spec.args.map { a =>
     a.defaults.get(rate).map(v => ConstElem(Vector(v)))
   }
-  var outputs: Vec[Option[(GraphElem, Int)]]  = Vec.fill(spec.outputs.size)(None)
+  var outputs: Vec[Option[(GraphElem, Int)]] = Vec.fill(spec.outputs.size)(None)
   def numIns  = inputs.size
   def numOuts = outputs.size
 }

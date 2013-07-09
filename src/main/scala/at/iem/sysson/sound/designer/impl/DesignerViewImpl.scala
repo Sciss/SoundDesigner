@@ -251,7 +251,7 @@ private[designer] object DesignerViewImpl {
       val n   = g.addNode()
       n.set(COL_ELEM, new VisualGraphElem)
       val vi  = visualization.getVisualItem(GROUP_GRAPH, n)
-      val mp  =dragControl.mousePoint
+      val mp  = dragControl.mousePoint
       vi.setX(mp.getX - 2)
       vi.setY(mp.getY - 2)
       editObject(vi)
@@ -262,7 +262,7 @@ private[designer] object DesignerViewImpl {
 private[impl] sealed trait DesignerViewImpl extends DesignerView {
   def display: Display
   def visualization: Visualization
-  def getData( vi: VisualItem): Option[VisualElement]
+  def getData (vi: VisualItem): Option[VisualElement]
   def getPorts(vi: VisualItem): Option[VisualPorts  ]
 
   def editObject(vi: VisualItem): Unit
