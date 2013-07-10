@@ -77,8 +77,8 @@ private[impl] final class BoxRenderer[S <: Sys[S]](d: PaneImpl[S]) extends Abstr
         val y       = b.getY.toFloat
         g.translate(x, y)
         g.setColor(portColr)
-        ports.inlets .foreach(g.fill(_))
-        ports.outlets.foreach(g.fill(_))
+        ports.inlets .foreach(g.fill)
+        ports.outlets.foreach(g.fill)
         ports.active.foreach { p =>
           val r0 = p.visualRect(ports)
           g.setColor(colrSel)

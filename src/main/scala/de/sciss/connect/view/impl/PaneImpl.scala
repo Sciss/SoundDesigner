@@ -57,7 +57,7 @@ object PaneImpl {
       import KeyStrokes._
       imap.put(menu1 + VK_1, "designer.putObject")
       amap.put("designer.putObject", Action("putObject") {
-        //enterPutObject()
+        putObject()
       }.peer)
       imap.put(menu1 + VK_3, "designer.putInt")
       amap.put("designer.putInt", Action("putInt") {
@@ -87,15 +87,10 @@ object PaneImpl {
         cueMap.put(elem.id, cue)
         patcher().add(elem)
       }
+    }
 
-      //    val n       = g.addNode()
-      //    val source  =
-      //    n.set(COL_ELEM, new VisualInt[S](source, 0)
-      //    val vi  = visualization.getVisualItem(GROUP_GRAPH, n)
-      //    vi.setX(mp.getX - 2)
-      //    vi.setY(mp.getY - 2)
-      //    editObject(vi)
-      //    visualization.repaint()
+    private def putObject(): Unit = {
+
     }
 
     def elemAdded(elem: Attribute[S])(implicit tx: S#Tx): Unit = {
