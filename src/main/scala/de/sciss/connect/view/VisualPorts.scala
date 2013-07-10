@@ -5,8 +5,10 @@ import collection.immutable.{IndexedSeq => Vec}
 
 object VisualPorts {
   final val MinSpacing = 10
+
+  def apply(numIns: Int, numOuts: Int): VisualPorts = new VisualPorts(numIns, numOuts)
 }
-final class VisualPorts(numIns: Int, numOuts: Int) {
+final class VisualPorts private(val numIns: Int, val numOuts: Int) {
   val inlets  = Vec.fill(numIns )(new Rectangle2D.Float)
   val outlets = Vec.fill(numOuts)(new Rectangle2D.Float)
   var active  = Option.empty[Port]

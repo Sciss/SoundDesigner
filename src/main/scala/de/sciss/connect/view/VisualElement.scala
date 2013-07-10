@@ -5,6 +5,7 @@ import de.sciss.lucre.stm
 import de.sciss.synth.proc.{Attribute, Sys}
 import de.sciss.connect.view.impl.{UGenSourceRenderer, BooleanRenderer, ToStringRenderer}
 import prefuse.data.Node
+import de.sciss.synth.UGenSpec
 
 sealed trait VisualElement /* [S <: Sys[S]] */ {
   //  var name: String = ""
@@ -45,10 +46,12 @@ sealed trait VisualElementT[S <: Sys[S]] extends VisualElement
 //  def renderer: ElementRenderer = ???
 //}
 
-class VisualUGenSource[S <: Sys[S]](val source: stm.Source[S#Tx, UGenSource[S]], var value: Any)
+class VisualUGenSource[S <: Sys[S]](val source: stm.Source[S#Tx, UGenSource[S]], spec: UGenSpec)
   extends VisualElementT[S] {
 
-  def ports = new VisualPorts(0, 0) // XXX TODO
+  def value = spec
+
+  val ports = VisualPorts(numIns = spec.args.size, numOuts = spec.outputs.size)
 
   def renderer: ElementRenderer = UGenSourceRenderer
 }
@@ -58,7 +61,7 @@ class VisualIncompleteElement[S <: Sys[S]](val source: stm.Source[S#Tx, Incomple
 
   override def defaultState = ElementState.Edit
 
-  val ports = new VisualPorts(0, 0)
+  val ports = VisualPorts(0, 0)
 
   def renderer: ElementRenderer = ToStringRenderer
 }
@@ -66,7 +69,7 @@ class VisualIncompleteElement[S <: Sys[S]](val source: stm.Source[S#Tx, Incomple
 class VisualInt[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Int[S]], var value: Int)
   extends VisualElementT[S] {
 
-  val ports = new VisualPorts(numIns = 0, numOuts = 1)
+  val ports = VisualPorts(numIns = 0, numOuts = 1)
 
   def renderer: ElementRenderer = ToStringRenderer
 }
@@ -74,7 +77,7 @@ class VisualInt[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Int[S]], var
 class VisualBoolean[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Boolean[S]], var value: Boolean)
   extends VisualElementT[S] {
 
-  val ports = new VisualPorts(numIns = 0, numOuts = 1)
+  val ports = VisualPorts(numIns = 0, numOuts = 1)
 
   def renderer: ElementRenderer = BooleanRenderer
 }

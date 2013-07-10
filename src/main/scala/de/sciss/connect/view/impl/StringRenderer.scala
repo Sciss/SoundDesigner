@@ -12,9 +12,12 @@ trait StringRendererLike extends ElementRenderer {
   protected def dataToString(data: VisualElement): String
 
   def getShape(x: Double, y: Double, data: VisualElement): Shape = {
-    val fm  = BoxRenderer.defaultFontMetrics
-    val w1  = fm.stringWidth(dataToString(data))
-    val w   = math.max(BoxRenderer.MinBoxWidth, w1 + 6)
+    val fm    = BoxRenderer.defaultFontMetrics
+    val w1    = fm.stringWidth(dataToString(data))
+    val w2    = math.max(BoxRenderer.MinBoxWidth, w1 + 6)
+    val ports = data.ports
+    val w3    = math.max(ports.numIns, ports.numOuts) * VisualPorts.MinSpacing
+    val w     = math.max(w2, w3)
     r.setRect(x, y, w, BoxRenderer.DefaultBoxHeight)
     r
   }
