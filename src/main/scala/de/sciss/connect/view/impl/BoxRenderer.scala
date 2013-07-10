@@ -71,7 +71,8 @@ private[impl] final class BoxRenderer[S <: Sys[S]](d: PaneImpl[S]) extends Abstr
 
       data.renderer.paint(g, b, data)
 
-      d.getPorts(vi).foreach { ports =>
+      val ports   = data.ports
+      if (ports.nonEmpty) {
         val atOrig  = g.getTransform
         val x       = b.getX.toFloat
         val y       = b.getY.toFloat

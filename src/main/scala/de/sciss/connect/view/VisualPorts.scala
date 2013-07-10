@@ -1,17 +1,18 @@
-package de.sciss.connect
-package view
-package impl
+package de.sciss.connect.view
 
 import java.awt.geom.Rectangle2D
 import collection.immutable.{IndexedSeq => Vec}
 
-private[impl] object VisualPorts {
-  final val minSpacing = 10
+object VisualPorts {
+  final val MinSpacing = 10
 }
-private[impl] final class VisualPorts(numIns: Int, numOuts: Int) {
+final class VisualPorts(numIns: Int, numOuts: Int) {
   val inlets  = Vec.fill(numIns )(new Rectangle2D.Float)
   val outlets = Vec.fill(numOuts)(new Rectangle2D.Float)
   var active  = Option.empty[Port]
+
+  def isEmpty   = numIns == 0 && numOuts == 0
+  def nonEmpty  = !isEmpty
 
   def update(bounds: Rectangle2D): Unit = {
     //      val x       = bounds.getX.toFloat

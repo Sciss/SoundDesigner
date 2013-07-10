@@ -10,7 +10,8 @@ import javax.swing.SwingUtilities
 import prefuse.util.display.PaintListener
 import prefuse.Display
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.connect.view.impl
+import de.sciss.connect.view.{Port, VisualPorts, impl}
+import de.sciss.synth.proc.Sys
 
 // TODO: add TableListener to react to items disappearing (see original DragControl)
 object DragControl {
@@ -32,7 +33,7 @@ object DragControl {
 
   private val strkRubber = new BasicStroke(1.5f)
 }
-final class DragControl(d: impl.PaneImpl[_]) extends ControlAdapter {
+final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter {
   import DragControl._
 
   val mousePoint = new Point2D.Float()  // in virtual space
@@ -128,11 +129,12 @@ final class DragControl(d: impl.PaneImpl[_]) extends ControlAdapter {
   private def processMove(vi: VisualItem, e: MouseEvent): Unit = {
     reportMouse(e)
 
-    d.getPorts(vi).foreach { ports =>
-      activePort = detectPort(ports, vi, e)
+    d.getData(vi).foreach { data =>
+      val ports   = data.ports
+      activePort  = detectPort(ports, vi, e)
       if (ports.active != activePort) {
         ports.active = activePort
-//println("SET " + ports.active)
+        // println("SET " + ports.active)
         vi.setValidated(false)  // force repaint
         d.visualization.repaint()
       }
@@ -155,7 +157,7 @@ final class DragControl(d: impl.PaneImpl[_]) extends ControlAdapter {
 
     if (activePort.isDefined) {
       activePort  = None
-      // XXX TODO d.getPorts(vi).foreach(_.active = None)
+      d.getData(vi).foreach(_.ports.active = None)
       d.visualization.repaint()
     }
     d.display.setCursor(Cursor.getDefaultCursor)
@@ -173,7 +175,7 @@ final class DragControl(d: impl.PaneImpl[_]) extends ControlAdapter {
     // d.display.getAbsoluteCoordinate(e.getPoint(), down)
 
     if (e.getClickCount == 2 && activePort.isEmpty) {
-      // XXX TODO: d.editObject(vi)
+      d.editObject(vi)
     } else {
     dragPressed = true
       dragPort    = activePort
@@ -214,8 +216,8 @@ final class DragControl(d: impl.PaneImpl[_]) extends ControlAdapter {
     dragPort match {
       case Some(port) =>
         if (!dragStarted)
-          d.getPorts(vi).foreach { ports =>
-            Rubberband.reset(vi, ports, port, dragTemp)
+          d.getData(vi).foreach { data =>
+            Rubberband.reset(vi, data.ports, port, dragTemp)
             d.display.addPaintListener(Rubberband)
           }
         else

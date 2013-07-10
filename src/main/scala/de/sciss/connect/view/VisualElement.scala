@@ -3,7 +3,7 @@ package view
 
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.{Attribute, Sys}
-import de.sciss.connect.view.impl.IntRenderer
+import de.sciss.connect.view.impl.StringRenderer
 
 sealed trait VisualElement /* [S <: Sys[S]] */ {
   //  var name: String = ""
@@ -12,6 +12,10 @@ sealed trait VisualElement /* [S <: Sys[S]] */ {
   var state: ElementState = defaultState
 
   def renderer: ElementRenderer
+
+  def ports: VisualPorts
+
+  def value: Any
 }
 
 sealed trait VisualElementT[S <: Sys[S]] extends VisualElement
@@ -22,23 +26,33 @@ sealed trait VisualElementT[S <: Sys[S]] extends VisualElement
 class VisualProduct[S <: Sys[S]](val source: stm.Source[S#Tx, Product[S]], var value: Any)
   extends VisualElementT[S] {
 
+  def ports = ???
+
   def renderer: ElementRenderer = ???
 }
 
-class VisualInvalidObject[S <: Sys[S]](var text: String) extends VisualElementT[S] {
+class VisualIncompleteProduct[S <: Sys[S]](val source: stm.Source[S#Tx, IncompleteProduct[S]], var value: String)
+  extends VisualElementT[S] {
+
   override def defaultState = ElementState.Edit
 
-  def renderer: ElementRenderer = ???
+  val ports = new VisualPorts(0, 0)
+
+  def renderer: ElementRenderer = StringRenderer
 }
 
 class VisualInt[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Int[S]], var value: Int)
   extends VisualElementT[S] {
 
-  def renderer: ElementRenderer = IntRenderer
+  val ports = new VisualPorts(numIns = 0, numOuts = 1)
+
+  def renderer: ElementRenderer = StringRenderer
 }
 
 class VisualBoolean[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Boolean[S]], var value: Boolean)
   extends VisualElementT[S] {
+
+  val ports = new VisualPorts(numIns = 0, numOuts = 1)
 
   def renderer: ElementRenderer = ???
 }

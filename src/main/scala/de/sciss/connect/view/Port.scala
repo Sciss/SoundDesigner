@@ -1,10 +1,8 @@
-package de.sciss.connect
-package view
-package impl
+package de.sciss.connect.view
 
 import java.awt.geom.Rectangle2D
 
-private[impl] object Port {
+object Port {
   final case class In(idx: Int) extends Port {
     def visualRect(ports: VisualPorts)  = ports.inlets(idx)
     // def name(elem: GraphElem)           = elem.spec.args(idx).name
@@ -14,7 +12,7 @@ private[impl] object Port {
     // def name(elem: GraphElem)           = elem.spec.outputs(idx).name.getOrElse("out")
   }
 }
-private[impl] sealed trait Port {
+sealed trait Port {
   def visualRect(ports: VisualPorts): Rectangle2D
   // def name(elem: GraphElem): String
 }
