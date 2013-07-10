@@ -65,7 +65,7 @@ object PaneImpl {
       res
     }
     private val g   = new Graph
-    g .addColumn(COL_ELEM , classOf[VisualElement[S]])
+    g .addColumn(COL_ELEM , classOf[VisualElementT[S]])
     private val vg  = visualization.addGraph(GROUP_GRAPH, g)
     // vg.addColumn(COL_PORTS, classOf[VisualPorts])
 
@@ -120,11 +120,11 @@ object PaneImpl {
 
     val component = Component.wrap(display)
 
-    def getData(vi: VisualItem) = Option(vi.get(COL_ELEM).asInstanceOf[VisualElement[S]])
+    def getData(vi: VisualItem) = Option(vi.get(COL_ELEM).asInstanceOf[VisualElementT[S]])
   }
 }
 sealed trait PaneImpl[S <: Sys[S]] extends Pane[S] {
   def visualization: Visualization
   def display      : Display
-  def getData(vi: VisualItem): Option[VisualElement[S]]
+  def getData(vi: VisualItem): Option[VisualElementT[S]]
 }

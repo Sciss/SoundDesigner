@@ -5,13 +5,15 @@ package impl
 import prefuse.render.{Renderer, AbstractShapeRenderer}
 import java.awt.geom.Rectangle2D
 import prefuse.util.ColorLib
-import java.awt.{Graphics2D, Shape, BasicStroke, Color}
+import java.awt._
 import prefuse.visual.VisualItem
 import de.sciss.synth.proc.Sys
 
 private[impl] object BoxRenderer {
-  private final val MIN_BOX_WIDTH = 24
-  private final val BOX_HEIGHT    = 18
+  final val MinBoxWidth         = 24
+  final val DefaultBoxHeight    = 18
+
+  def defaultFontMetrics: FontMetrics = Renderer.DEFAULT_GRAPHICS.getFontMetrics(Style.font)
 
   private final val colrSel     = Style.selectionColor
   private final val strkColrOk  = ColorLib.getColor(192, 192, 192)
@@ -28,7 +30,7 @@ private[impl] final class BoxRenderer[S <: Sys[S]](d: PaneImpl[S]) extends Abstr
   import BoxRenderer._
 
   private val r   = new Rectangle2D.Float()
-  private val r2  = new Rectangle2D.Float()
+  // private val r2  = new Rectangle2D.Float()
 
   protected def getRawShape(vi: VisualItem): Shape = {
     var x    = vi.getX
@@ -36,47 +38,43 @@ private[impl] final class BoxRenderer[S <: Sys[S]](d: PaneImpl[S]) extends Abstr
     var y    = vi.getY
     if (y.isNaN || y.isInfinity) y = 0.0
 
-    val w = d.getData(vi) match {
-      case Some(data) =>
-        val fm = Renderer.DEFAULT_GRAPHICS.getFontMetrics(Style.font)
-        val m1 = MIN_BOX_WIDTH // XXX TODO math.max(MIN_BOX_WIDTH, fm.stringWidth(data.name) + 6)
-        data match {
-          //          case VisualGraphElem(ge) =>
-          //            val m2 = math.max(ge.numIns,ge.numOuts) * VisualPorts.minSpacing
-          //            math.max(m2, m1)
-          case _ => m1
-        }
-
-      case _ => MIN_BOX_WIDTH
+    d.getData(vi).fold[Shape] {
+      r.setRect(x, y, MinBoxWidth, DefaultBoxHeight)
+      r
+    } { data =>
+      data.renderer.getShape(x, y, data)
     }
-
-    r.setRect(x, y, w, BOX_HEIGHT)
-    r
   }
 
-  override def render(g: Graphics2D, vi: VisualItem): Unit = d.getData(vi).foreach { data =>
+  override def render(g: Graphics2D, vi: VisualItem): Unit = {
     val r = getShape(vi)
     val b = r.getBounds2D
     g.setColor(fillColr)
     g.fill(r)
-    data.state match {
-      case ElementState.Ok =>
-        g.setColor (strkColrOk)
-        g.setStroke(strkShpOk )
-      case ElementState.Edit =>
-        g.setColor (strkColrEdit)
-        g.setStroke(strkShpPend )
-      case ElementState.Error =>
-        g.setColor (strkColrErr)
-        g.setStroke(strkShpPend)
-    }
-    g.draw(r)
-    g.setColor(if (data.state == ElementState.Edit) textColrEdit else textColr)
-    g.setFont(Style.font)
-    val fm  = Renderer.DEFAULT_GRAPHICS.getFontMetrics(Style.font)
-    val x   = b.getX.toFloat
-    val y   = b.getY.toFloat
 
+    d.getData(vi).foreach { data =>
+      data.state match {
+        case ElementState.Ok =>
+          g.setColor (strkColrOk)
+          g.setStroke(strkShpOk )
+        case ElementState.Edit =>
+          g.setColor (strkColrEdit)
+          g.setStroke(strkShpPend )
+        case ElementState.Error =>
+          g.setColor (strkColrErr)
+          g.setStroke(strkShpPend)
+      }
+      g.draw(r)
+      g.setColor(if (data.state == ElementState.Edit) textColrEdit else textColr)
+      g.setFont(Style.font)
+      // val fm  = Renderer.DEFAULT_GRAPHICS.getFontMetrics(Style.font)
+
+      data.renderer.paint(g, b, data)
+
+    }
+
+    // val x   = b.getX.toFloat
+    // val y   = b.getY.toFloat
     // g.drawString(data.name, x + 3, y + 2 + fm.getAscent)
 
     //      data match {
