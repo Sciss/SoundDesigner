@@ -8,12 +8,12 @@ import serial.{DataInput, DataOutput}
 import expr.LinkedList
 
 object PatcherImpl {
-  // private type Map[S <: Sys[S]] = data.SkipList.Map[S, Int, List[Element[S]]]
+  // private type Map[S <: Sys[S]] = data.SkipList.Map[S, Int, List[NodeChanged[S]]]
   private type LL[S <: Sys[S]] = LinkedList.Modifiable[S, Attribute[S], Attribute.Update[S]]
 
   def apply[S <: Sys[S]](implicit tx: S#Tx): Patcher[S] = {
     val targets = evt.Targets[S]
-    // val map     = data.SkipList.Map.empty[S, Int, List[Element[S]]]
+    // val map     = data.SkipList.Map.empty[S, Int, List[NodeChanged[S]]]
     val list = expr.LinkedList.Modifiable[S, Attribute[S], Attribute.Update[S]](_.changed)
     new Impl[S](targets, list)
   }
@@ -46,20 +46,20 @@ object PatcherImpl {
       list.changed -/-> this
     }
 
-    def iterator(implicit tx: S#Tx): data.Iterator[S#Tx, Attribute[S]] = list.iterator
+    def nodeIterator(implicit tx: S#Tx): data.Iterator[S#Tx, Attribute[S]] = list.iterator
 
-    def add(elem: Attribute[S])(implicit tx: S#Tx) {
+    def addNode(elem: Attribute[S])(implicit tx: S#Tx) {
       list.addLast(elem)
     }
 
-    def remove(elem: Attribute[S])(implicit tx: S#Tx): Boolean = list.remove(elem)
+    def removeNode(elem: Attribute[S])(implicit tx: S#Tx): Boolean = list.remove(elem)
 
     def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Patcher.Update[S]] =
       pull(list.changed).map { ll =>
         val ch = ll.changes.map {
-          case LinkedList.Added  (idx, elem)        => Patcher.Added  (elem)
-          case LinkedList.Removed(idx, elem)        => Patcher.Removed(elem)
-          case LinkedList.Element(elem, elemUpdate) => Patcher.Element(elem, elemUpdate)
+          case LinkedList.Added  (idx, elem)        => Patcher.NodeAdded  (elem)
+          case LinkedList.Removed(idx, elem)        => Patcher.NodeRemoved(elem)
+          case LinkedList.Element(elem, elemUpdate) => Patcher.NodeChanged(elem, elemUpdate)
         }
         Patcher.Update(patcher, ch)
       }

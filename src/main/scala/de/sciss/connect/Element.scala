@@ -10,13 +10,13 @@ import reflect.runtime.universe.TypeTag
 import language.existentials
 // import impl.{ElementImpl => Impl}
 
-///* sealed */ trait Element[S <: Sys[S]] extends Disposable[S#Tx] {
-//  def changed: EventLike[S, Element.Update[S], Element[S]]
+///* sealed */ trait NodeChanged[S <: Sys[S]] extends Disposable[S#Tx] {
+//  def changed: EventLike[S, NodeChanged.Update[S], NodeChanged[S]]
 //}
 
 object Product {
 
-  //  sealed trait Update[S <: Sys[S]] extends Element.Update[S] {
+  //  sealed trait Update[S <: Sys[S]] extends NodeChanged.Update[S] {
   //    override def elem: Product[S]
   //  }
   // case class SpecChanged[S <: Sys[S]](elem: Product[S], change: evt.Change[UGenSpec]) extends Update[S]
@@ -47,10 +47,10 @@ trait Product[S <: Sys[S]] extends /* Writable with */ Attribute[S] /* Disposabl
   // def changed: EventLike[S, Product.Update[S], Product[S]]
 }
 
-//object Element {
+//object NodeChanged {
 //  import scala.{Int => _Int, Boolean => _Boolean}
 //
-//  sealed trait Update[S <: Sys[S]] { def elem: Element[S] }
+//  sealed trait Update[S <: Sys[S]] { def elem: NodeChanged[S] }
 //
 //  object Int {
 //    def newVar[S <: Sys[S]](init: _Int)(implicit tx: S#Tx): Var[S] = Impl.Int.newVar(init)
@@ -59,7 +59,7 @@ trait Product[S <: Sys[S]] extends /* Writable with */ Attribute[S] /* Disposabl
 //      def value_=(i: _Int)(implicit tx: S#Tx): Unit
 //    }
 //  }
-//  trait Int[S <: Sys[S]] extends Element[S] {
+//  trait Int[S <: Sys[S]] extends NodeChanged[S] {
 //    def value(implicit tx: S#Tx): _Int
 //  }
 //
@@ -68,7 +68,7 @@ trait Product[S <: Sys[S]] extends /* Writable with */ Attribute[S] /* Disposabl
 //      def value_=(i: _Boolean)(implicit tx: S#Tx): Unit
 //    }
 //  }
-//  trait Boolean[S <: Sys[S]] extends Element[S] {
+//  trait Boolean[S <: Sys[S]] extends NodeChanged[S] {
 //    def value(implicit tx: S#Tx): _Boolean
 //  }
 //}

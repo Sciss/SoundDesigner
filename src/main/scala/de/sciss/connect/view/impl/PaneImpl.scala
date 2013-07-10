@@ -28,9 +28,9 @@ object PaneImpl {
     val res = new Impl[S](tx.newHandle(patcher), viewMap, cueMap, config)
     patcher.changed.react { implicit tx => { upd =>
       upd.changes.foreach {
-        case Patcher.Added  (elem) => res.elemAdded  (elem)
-        case Patcher.Removed(elem) => res.elemRemoved(elem)
-        case Patcher.Element(elem, elemUpd) =>
+        case Patcher.NodeAdded  (elem) => res.elemAdded  (elem)
+        case Patcher.NodeRemoved(elem) => res.elemRemoved(elem)
+        case Patcher.NodeChanged(elem, elemUpd) =>
       }
     }}
 
@@ -96,7 +96,7 @@ object PaneImpl {
         val e = elem(tx)
         // println(s"Put cue $cue")
         cueMap.put(e.id, cue)
-        patcher().add(e)
+        patcher().addNode(e)
       }
     }
 
@@ -193,9 +193,9 @@ object PaneImpl {
                   completeOpt.foreach { complete =>
                     val incomplete  = vge.source()
                     val p           = patcher()
-                    p.remove(incomplete)
+                    p.removeNode(incomplete)
                     cueMap.put(complete.id, cue)
-                    p.add(complete)
+                    p.addNode(complete)
                   }
                   completeOpt.isDefined
                 }
