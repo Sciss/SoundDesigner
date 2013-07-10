@@ -2,24 +2,48 @@ package de.sciss.connect
 
 import de.sciss.desktop.impl.SwingApplicationImpl
 import de.sciss.desktop.Menu
-import de.sciss.synth.proc.InMemory
+import de.sciss.synth.proc.{Attribute, InMemory}
 import de.sciss.connect.view.Pane
+import de.sciss.synth.expr.{Ints, Booleans, ExprImplicits}
 
 object Application extends SwingApplicationImpl("Connect") {
   protected lazy val menuFactory = Menu.Root()
 
   type Document = Unit
+  type S        = InMemory
+  val  S        = InMemory
 
   override protected def init() {
-    type S = InMemory
-    val  S = InMemory
 
     implicit val system = S()
     val pane = system.step { implicit tx =>
-      val patcher = Patcher[S]
-      Pane(patcher)
+      val patcher     = Patcher[S]
+      val config      = Pane.Config[S]()
+      config.factory  = { implicit tx: S#Tx => name => factory(name) }
+      Pane(patcher, config)
     }
-    // println(s"pane $pane, component ${pane.component}")
     new view.Window(pane)
+  }
+
+  def factory(name: String)(implicit tx: S#Tx): Option[Attribute[S]] = {
+    val imp = ExprImplicits[S]
+    import imp._
+
+    val name1 = name.trim
+    if (name1.forall(_.isDigit)) {
+      val i = name.toInt
+      val v = Ints.newVar[S](i)
+      val a = Attribute.Int(v)
+      Some(a)
+
+    } else if (name == "true" || name == "false") {
+      val b = name.toBoolean
+      val v = Booleans.newVar[S](b)
+      val a = Attribute.Boolean(v)
+      Some(a)
+
+    } else {
+      None
+    }
   }
 }

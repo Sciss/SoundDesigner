@@ -2,19 +2,30 @@ package de.sciss.connect
 package view
 
 import de.sciss.synth.proc.{Attribute, Sys}
-import prefuse.{Display, Visualization}
-import javax.swing.JComponent
-import java.awt.event.KeyEvent
-import de.sciss.desktop.KeyStrokes
-import scala.swing.{Component, Action}
-import prefuse.data.Graph
+import scala.swing.Component
 import de.sciss.lucre.stm
-import de.sciss.synth.expr.ExprImplicits
-import de.sciss.lucre.stm.IdentifierMap
 import impl.{PaneImpl => Impl}
+import language.implicitConversions
 
 object Pane {
-  def apply[S <: Sys[S]](patcher: Patcher[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Pane[S] = Impl[S](patcher)
+  type Factory[S <: Sys[S]] = S#Tx => String => Option[Attribute[S]]
+
+  trait ConfigLike[S <: Sys[S]] {
+    def factory: Factory[S]
+  }
+  object Config {
+    def apply[S <: Sys[S]]() = new ConfigBuilder[S]
+    implicit def build[S <: Sys[S]](b: ConfigBuilder[S]): Config[S] = b.build
+  }
+  final case class Config[S <: Sys[S]](factory: Factory[S]) extends ConfigLike[S]
+
+  final class ConfigBuilder[S <: Sys[S]] extends ConfigLike[S] {
+    var factory: Factory[S] = { _ => _ => None }
+    def build: Config[S] = Config(factory)
+  }
+
+  def apply[S <: Sys[S]](patcher: Patcher[S], config: Config[S] = Config[S]())
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): Pane[S] = Impl[S](patcher, config)
 }
 trait Pane[S <: Sys[S]] {
   def component: Component

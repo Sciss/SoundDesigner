@@ -21,13 +21,14 @@ import javax.swing.event.{DocumentListener, DocumentEvent}
 
 // XXX TODO: requires call on EDT
 object PaneImpl {
-  def apply[S <: Sys[S]](patcher: Patcher[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): PaneImpl[S] = {
+  def apply[S <: Sys[S]](patcher: Patcher[S], config: Pane.Config[S])
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): PaneImpl[S] = {
     val cueMap = tx.newInMemoryIDMap[PutMetaData]
-    val res = new Impl[S](tx.newHandle(patcher), cueMap)
+    val res = new Impl[S](tx.newHandle(patcher), cueMap, config)
     patcher.changed.react { implicit tx => { upd =>
       upd.changes.foreach {
-        case Patcher.Added  (elem) => res.elemAdded(elem)
-        case Patcher.Removed(elem) =>
+        case Patcher.Added  (elem) => res.elemAdded  (elem)
+        case Patcher.Removed(elem) => res.elemRemoved(elem)
         case Patcher.Element(elem, elemUpd) =>
       }
     }}
@@ -44,7 +45,8 @@ object PaneImpl {
   // private final val COL_PORTS     = "ports"
 
   private final class Impl[S <: Sys[S]](patcher: stm.Source[S#Tx, Patcher[S]],
-                                        cueMap: IdentifierMap[S#ID, S#Tx, PutMetaData])
+                                        cueMap: IdentifierMap[S#ID, S#Tx, PutMetaData],
+                                        config: Pane.Config[S])
                                        (implicit cursor: stm.Cursor[S]) extends PaneImpl[S] {
     val imp = ExprImplicits[S]
     import imp._
@@ -103,6 +105,7 @@ object PaneImpl {
       }
       dataOpt.foreach { data =>
         val cueOpt = cueMap.get(elem.id)
+        if (cueOpt.nonEmpty) cueMap.remove(elem.id)
         // println(s"Get cue $cueOpt")
         guiFromTx {
           val n       = g.addNode()
@@ -118,6 +121,10 @@ object PaneImpl {
           visualization.repaint()
         }
       }
+    }
+
+    def elemRemoved(elem: Attribute[S])(implicit tx: S#Tx): Unit = {
+      println("TODO: remove")
     }
 
     val component = Component.wrap(display)
@@ -159,35 +166,27 @@ object PaneImpl {
             case vge: VisualIncompleteElement[S] =>
               vge.value = txt
               if (vge.value != editingOldText) {
-                // val n = vge.value
-                // val i = n.indexOf('.')
-                //                val (name, rate) =
-                //                  if (i > 0) {
-                //                    val rOpt = PartialFunction.condOpt(n.substring(i + 1)) {
-                //                      case audio  .methodName   => audio
-                //                      case control.methodName => control
-                //                      case scalar .methodName  => scalar
-                //                      case demand .methodName  => demand
-                //                    }
-                //                    rOpt match {
-                //                      case Some(r)  => n.substring(0, i) -> r
-                //                      case _        => "???" -> UndefinedRate
-                //                    }
-                //                  } else {
-                //                    n -> UndefinedRate
-                //                  }
-                //                Collection.get(name) match {
-                //                  case Some(spec) =>
-                //                    vge.state   = ElementState.Ok
-                //                    vge.content = Some(new GraphElem(spec, rate))
-                //                    vi.set(COL_PORTS, new VisualPorts(numIns = spec.args.size, numOuts = spec.outputs.size))
-                //                  case _ =>
-                vge.state   = ElementState.Error
-                   // vge.content = None
-                   // vi.set(COL_PORTS, null)
-                // }
-                updateEditingBounds(vi)
-                visualization.repaint()
+
+                val mp  = new Point2D.Float(vi.getX.toFloat, vi.getY.toFloat)
+                val cue = PutMetaData(mp, edit = false)
+
+                val success = cursor.step { implicit tx =>
+                  val completeOpt = config.factory(tx)(vge.value)
+                  completeOpt.foreach { complete =>
+                    val incomplete  = vge.source()
+                    val p           = patcher()
+                    p.remove(incomplete)
+                    cueMap.put(complete.id, cue)
+                    p.add(complete)
+                  }
+                  completeOpt.isDefined
+                }
+
+                if (!success) {
+                  vge.state   = ElementState.Error
+                  updateEditingBounds(vi)
+                  visualization.repaint()
+                }
               }
 
             case _ =>
