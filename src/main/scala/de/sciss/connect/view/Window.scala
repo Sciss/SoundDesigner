@@ -8,14 +8,14 @@ import de.sciss.synth.proc.{Sys, InMemory}
 import scala.swing.Component
 import de.sciss.lucre.stm
 
-class Window[S <: Sys[S]](implicit cursor: stm.Cursor[S]) extends WindowImpl {
+class Window[S <: Sys[S]](pane: Pane[S]) extends WindowImpl {
   def handler: WindowHandler = Application.windowHandler
 
   protected def style = desktop.Window.Regular
 
-  private val pane = new Pane[S]
+  // private val pane = Pane[S](patcher)
 
-  contents = Component.wrap(pane.display)
+  contents = pane.component
 
   pack()
   // centerOnScreen()
