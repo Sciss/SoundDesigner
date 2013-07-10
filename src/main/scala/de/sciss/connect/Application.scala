@@ -6,9 +6,6 @@ import de.sciss.synth.proc.{Attribute, InMemory}
 import de.sciss.connect.view.Pane
 import de.sciss.synth.expr.{Ints, Booleans, ExprImplicits}
 import de.sciss.synth.UGenSpec
-import de.sciss.connect.Product.{ArgSpec, Args}
-import de.sciss.lucre.{event => evt}
-import evt.EventLike
 
 object Application extends SwingApplicationImpl("Connect") {
   protected lazy val menuFactory = Menu.Root()
@@ -52,32 +49,7 @@ object Application extends SwingApplicationImpl("Connect") {
       Some(a)
 
     } else Collection.get(name1).map { uSpec =>
-      //      val p = new Product[S] {
-      //        def prefix = uSpec.name
-      //
-      //        val numArgs = uSpec.args.size + (uSpec.rates match {
-      //          case UGenSpec.Rates.Implied(_, _) => 0
-      //          case _ => 1
-      //        })
-      //
-      //        def argSpec(idx: Int): Product.ArgSpec = ???
-      //
-      //        def arg: Args[S#Tx] = ???
-      //
-      //        def value(implicit tx: S#Tx): Any = "foo"
-      //
-      //        // def changed = evt.Dummy[S, Update[S], Product[S]]
-      //
-      //        def dispose()(implicit tx: S#Tx) {
-      //          // XXX TODO
-      //        }
-      //
-      //
-      //      }
-      //
-      //      p
-      //    }
-      ???
+      UGenSource[S](uSpec)
     }
   }
 }

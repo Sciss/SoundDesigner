@@ -3,7 +3,7 @@ package view
 
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.{Attribute, Sys}
-import de.sciss.connect.view.impl.StringRenderer
+import de.sciss.connect.view.impl.{UGenSourceRenderer, BooleanRenderer, ToStringRenderer}
 import prefuse.data.Node
 
 sealed trait VisualElement /* [S <: Sys[S]] */ {
@@ -37,12 +37,20 @@ sealed trait VisualElementT[S <: Sys[S]] extends VisualElement
 //object VisualProduct {
 //  def unapply[S <: Sys[S]](p: VisualProduct[S]): Option[stm.Source[S#Tx, Product[S]]] = p.content
 //}
-class VisualProduct[S <: Sys[S]](val source: stm.Source[S#Tx, Product[S]], var value: Any)
+//class VisualProduct[S <: Sys[S]](val source: stm.Source[S#Tx, Product[S]], var value: Any)
+//  extends VisualElementT[S] {
+//
+//  def ports = ???
+//
+//  def renderer: ElementRenderer = ???
+//}
+
+class VisualUGenSource[S <: Sys[S]](val source: stm.Source[S#Tx, UGenSource[S]], var value: Any)
   extends VisualElementT[S] {
 
-  def ports = ???
+  def ports = new VisualPorts(0, 0) // XXX TODO
 
-  def renderer: ElementRenderer = ???
+  def renderer: ElementRenderer = UGenSourceRenderer
 }
 
 class VisualIncompleteElement[S <: Sys[S]](val source: stm.Source[S#Tx, IncompleteElement[S]], var value: String)
@@ -52,7 +60,7 @@ class VisualIncompleteElement[S <: Sys[S]](val source: stm.Source[S#Tx, Incomple
 
   val ports = new VisualPorts(0, 0)
 
-  def renderer: ElementRenderer = StringRenderer
+  def renderer: ElementRenderer = ToStringRenderer
 }
 
 class VisualInt[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Int[S]], var value: Int)
@@ -60,7 +68,7 @@ class VisualInt[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Int[S]], var
 
   val ports = new VisualPorts(numIns = 0, numOuts = 1)
 
-  def renderer: ElementRenderer = StringRenderer
+  def renderer: ElementRenderer = ToStringRenderer
 }
 
 class VisualBoolean[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Boolean[S]], var value: Boolean)
@@ -68,5 +76,5 @@ class VisualBoolean[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Boolean[
 
   val ports = new VisualPorts(numIns = 0, numOuts = 1)
 
-  def renderer: ElementRenderer = StringRenderer
+  def renderer: ElementRenderer = BooleanRenderer
 }
