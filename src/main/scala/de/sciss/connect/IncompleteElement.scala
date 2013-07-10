@@ -1,7 +1,7 @@
 package de.sciss
 package connect
 
-import synth.proc.{Sys, Attribute}
+import synth.proc.Attribute
 import lucre.{event => evt, expr}
 import expr.Expr
 

@@ -5,6 +5,10 @@ import de.sciss.desktop.Menu
 import de.sciss.synth.proc.{Attribute, InMemory}
 import de.sciss.connect.view.Pane
 import de.sciss.synth.expr.{Ints, Booleans, ExprImplicits}
+import de.sciss.synth.UGenSpec
+import de.sciss.connect.Product.{ArgSpec, Args}
+import de.sciss.lucre.{event => evt}
+import evt.EventLike
 
 object Application extends SwingApplicationImpl("Connect") {
   protected lazy val menuFactory = Menu.Root()
@@ -24,6 +28,8 @@ object Application extends SwingApplicationImpl("Connect") {
     }
     new view.Window(pane)
   }
+
+  private val Collection = UGenSpec.standardUGens
 
   def factory(name: String)(implicit tx: S#Tx): Option[Attribute[S]] = {
     val imp = ExprImplicits[S]
@@ -45,8 +51,33 @@ object Application extends SwingApplicationImpl("Connect") {
       val a = Attribute.Boolean(v)
       Some(a)
 
-    } else {
-      None
+    } else Collection.get(name1).map { uSpec =>
+      //      val p = new Product[S] {
+      //        def prefix = uSpec.name
+      //
+      //        val numArgs = uSpec.args.size + (uSpec.rates match {
+      //          case UGenSpec.Rates.Implied(_, _) => 0
+      //          case _ => 1
+      //        })
+      //
+      //        def argSpec(idx: Int): Product.ArgSpec = ???
+      //
+      //        def arg: Args[S#Tx] = ???
+      //
+      //        def value(implicit tx: S#Tx): Any = "foo"
+      //
+      //        // def changed = evt.Dummy[S, Update[S], Product[S]]
+      //
+      //        def dispose()(implicit tx: S#Tx) {
+      //          // XXX TODO
+      //        }
+      //
+      //
+      //      }
+      //
+      //      p
+      //    }
+      ???
     }
   }
 }
