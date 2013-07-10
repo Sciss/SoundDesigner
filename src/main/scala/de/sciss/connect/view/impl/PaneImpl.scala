@@ -39,6 +39,7 @@ object PaneImpl {
 
   private final val GROUP_GRAPH   = "graph"
   private final val COL_ELEM      = "element"
+  private final val COL_PORTS     = "ports"
 
   private final class Impl[S <: Sys[S]](patcher: stm.Source[S#Tx, Patcher[S]],
                                         cueMap: IdentifierMap[S#ID, S#Tx, ClickCue])
@@ -67,7 +68,7 @@ object PaneImpl {
     private val g   = new Graph
     g .addColumn(COL_ELEM , classOf[VisualElementT[S]])
     private val vg  = visualization.addGraph(GROUP_GRAPH, g)
-    // vg.addColumn(COL_PORTS, classOf[VisualPorts])
+    vg.addColumn(COL_PORTS, classOf[VisualPorts])
 
     display.addControlListener(dragControl)
     display.addControlListener(new PanControl())
@@ -112,6 +113,9 @@ object PaneImpl {
           val mp      = cueOpt.map(_.point).getOrElse(lastMousePoint())
           vi.setX(mp.getX - 2)
           vi.setY(mp.getY - 2)
+          val ports = new VisualPorts(numIns = 0, numOuts = 1)
+          ports.update(vi.getBounds)
+          vi.set(COL_PORTS, ports)
           // editObject(vi)
           visualization.repaint()
         }
@@ -120,11 +124,13 @@ object PaneImpl {
 
     val component = Component.wrap(display)
 
-    def getData(vi: VisualItem) = Option(vi.get(COL_ELEM).asInstanceOf[VisualElementT[S]])
+    def getData (vi: VisualItem) = Option(vi.get(COL_ELEM ).asInstanceOf[VisualElementT[S]])
+    def getPorts(vi: VisualItem) = Option(vi.get(COL_PORTS).asInstanceOf[VisualPorts      ])
   }
 }
 sealed trait PaneImpl[S <: Sys[S]] extends Pane[S] {
   def visualization: Visualization
   def display      : Display
-  def getData(vi: VisualItem): Option[VisualElementT[S]]
+  def getData (vi: VisualItem): Option[VisualElementT[S]]
+  def getPorts(vi: VisualItem): Option[VisualPorts      ]
 }

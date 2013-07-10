@@ -47,10 +47,10 @@ private[impl] final class BoxRenderer[S <: Sys[S]](d: PaneImpl[S]) extends Abstr
   }
 
   override def render(g: Graphics2D, vi: VisualItem): Unit = {
-    val r = getShape(vi)
-    val b = r.getBounds2D
+    val shp = getShape(vi)
+    val b   = shp.getBounds2D
     g.setColor(fillColr)
-    g.fill(r)
+    g.fill(shp)
 
     d.getData(vi).foreach { data =>
       data.state match {
@@ -64,39 +64,29 @@ private[impl] final class BoxRenderer[S <: Sys[S]](d: PaneImpl[S]) extends Abstr
           g.setColor (strkColrErr)
           g.setStroke(strkShpPend)
       }
-      g.draw(r)
+      g.draw(shp)
       g.setColor(if (data.state == ElementState.Edit) textColrEdit else textColr)
       g.setFont(Style.font)
       // val fm  = Renderer.DEFAULT_GRAPHICS.getFontMetrics(Style.font)
 
       data.renderer.paint(g, b, data)
 
+      d.getPorts(vi).foreach { ports =>
+        val atOrig  = g.getTransform
+        val x       = b.getX.toFloat
+        val y       = b.getY.toFloat
+        g.translate(x, y)
+        g.setColor(portColr)
+        ports.inlets .foreach(g.fill(_))
+        ports.outlets.foreach(g.fill(_))
+        ports.active.foreach { p =>
+          val r0 = p.visualRect(ports)
+          g.setColor(colrSel)
+          r.setRect(r0.getX - 1, r0.getY - 1, r0.getWidth + 2, r0.getHeight + 2)
+          g.fill(r0)
+        }
+        g.setTransform(atOrig)
+      }
     }
-
-    // val x   = b.getX.toFloat
-    // val y   = b.getY.toFloat
-    // g.drawString(data.name, x + 3, y + 2 + fm.getAscent)
-
-    //      data match {
-    //        case vge: VisualGraphElem =>
-    //          vge.content.foreach { ge =>
-    //            d.getPorts(vi).foreach { ports =>
-    //              val atOrig = g.getTransform
-    //              g.translate(x, y)
-    //              g.setColor(portColr)
-    //              ports.inlets .foreach(g.fill(_))
-    //              ports.outlets.foreach(g.fill(_))
-    //              ports.active.foreach { p =>
-    //                val r = p.visualRect(ports)
-    //                g.setColor(colrSel)
-    //                r2.setRect(r.getX - 1, r.getY - 1, r.getWidth + 2, r.getHeight + 2)
-    //                g.fill(r2)
-    //              }
-    //              g.setTransform(atOrig)
-    //            }
-    //          }
-    //        case vc: VisualConstant =>
-    //
-    //      }
   }
 }

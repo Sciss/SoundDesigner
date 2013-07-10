@@ -37,39 +37,39 @@ final class DragControl(d: impl.PaneImpl[_]) extends ControlAdapter {
 
   val mousePoint = new Point2D.Float()  // in virtual space
   private var activeItem  = Option.empty[VisualItem]
-  // private var activePort  = Option.empty[Port]
+  private var activePort  = Option.empty[Port]
 
   private val dragPoint   = new Point2D.Float
   private var dragPressed = false
   private var dragStarted = false
-  // private var dragPort    = Option.empty[Port]
+  private var dragPort    = Option.empty[Port]
 
   private val dragTemp    = new Point2D.Float
 
   private object Rubberband extends PaintListener {
     private val line    = new Line2D.Float
-//    private val tempPt1 = new Point2D.Float
-//    private val tempPt2 = new Point2D.Float
+    // private val tempPt1 = new Point2D.Float
+    // private val tempPt2 = new Point2D.Float
 
     private var vi:     VisualItem  = _
-    // private var ports:  VisualPorts = _
-    // private var port:   Port        = _
+    private var ports:  VisualPorts = _
+    private var port:   Port        = _
     private val pt                  = new Point2D.Float
 
-    //    def reset(vi: VisualItem, ports: VisualPorts, port: Port, pt: Point2D): Unit = {
-    //      this.vi     = vi
-    //      this.ports  = ports
-    //      this.port   = port
-    //
-    //      drag(pt)
-    //    }
-    //
-    //    def end(): Unit = {
-    //      vi    = null
-    //      ports = null
-    //      port  = null
-    //      d.visualization.repaint()
-    //    }
+    def reset(vi: VisualItem, ports: VisualPorts, port: Port, pt: Point2D): Unit = {
+      this.vi     = vi
+      this.ports  = ports
+      this.port   = port
+
+      drag(pt)
+    }
+
+    def end(): Unit = {
+      vi    = null
+      ports = null
+      port  = null
+      d.visualization.repaint()
+    }
 
     def drag(pt: Point2D): Unit = {
       this.pt.setLocation(pt)
@@ -82,18 +82,18 @@ final class DragControl(d: impl.PaneImpl[_]) extends ControlAdapter {
       if (vi == null) return
 
       val b         = vi.getBounds
-      //      val r         = port.visualRect(ports)
-      //      val rx        = r.getCenterX + b.getX
-      //      val ry        = r.getCenterY + b.getY
+      val r         = port.visualRect(ports)
+      val rx        = r.getCenterX + b.getX
+      val ry        = r.getCenterY + b.getY
       val at        = disp.getTransform
       //      tempPt1.setLocation(rx, ry)
       //      at.transform(tempPt1, tempPt2)
       //      val rxt       = tempPt2.getX
       //      val ryt       = tempPt2.getY
 
-      // line.setLine(rx, ry, pt.getX, pt.getY)
+      line.setLine(rx, ry, pt.getX, pt.getY)
       val lineO = strkRubber.createStrokedShape(line)
-      val shp = at.createTransformedShape(lineO)
+      val shp   = at.createTransformedShape(lineO)
 
       g.setColor(Style.selectionColor)
       g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
@@ -114,33 +114,33 @@ final class DragControl(d: impl.PaneImpl[_]) extends ControlAdapter {
     r.getMinX - 1 <= tx && r.getMaxX >= tx && r.getMinY - 1 <= ty && r.getMaxY >= ty
   }
 
-  //  private def detectPort(ports: VisualPorts, vi: VisualItem, e: MouseEvent): Option[Port] = {
-  //    val b     = vi.getBounds
-  //    val tx    = mousePoint.getX - b.getX
-  //    val ty    = mousePoint.getY - b.getY
-  //    val idxIn = findPort(ports.inlets, tx, ty)
-  //    if (idxIn >= 0) Some(Port.In(idxIn)) else {
-  //      val idxOut = findPort(ports.outlets, tx, ty)
-  //      if (idxOut >= 0) Some(Port.Out(idxOut)) else None
-  //    }
-  //  }
+  private def detectPort(ports: VisualPorts, vi: VisualItem, e: MouseEvent): Option[Port] = {
+    val b     = vi.getBounds
+    val tx    = mousePoint.getX - b.getX
+    val ty    = mousePoint.getY - b.getY
+    val idxIn = findPort(ports.inlets, tx, ty)
+    if (idxIn >= 0) Some(Port.In(idxIn)) else {
+      val idxOut = findPort(ports.outlets, tx, ty)
+      if (idxOut >= 0) Some(Port.Out(idxOut)) else None
+    }
+  }
 
   private def processMove(vi: VisualItem, e: MouseEvent): Unit = {
     reportMouse(e)
-    // XXX TODO
-    //    d.getPorts(vi).foreach { ports =>
-    //      activePort = detectPort(ports, vi, e)
-    //      if (ports.active != activePort) {
-    //        ports.active = activePort
-    ////println("SET " + ports.active)
-    //        vi.setValidated(false)  // force repaint
-    //        d.visualization.repaint()
-    //      }
-    //    }
+
+    d.getPorts(vi).foreach { ports =>
+      activePort = detectPort(ports, vi, e)
+      if (ports.active != activePort) {
+        ports.active = activePort
+//println("SET " + ports.active)
+        vi.setValidated(false)  // force repaint
+        d.visualization.repaint()
+      }
+    }
   }
 
   private def updateCursor(): Unit =
-    () // XXX TODO d.display.setCursor(if (activePort.isDefined) csrPatch else Cursor.getPredefinedCursor(Cursor.HAND_CURSOR))
+    d.display.setCursor(if (activePort.isDefined) csrPatch else Cursor.getPredefinedCursor(Cursor.HAND_CURSOR))
 
   override def itemEntered(vi: VisualItem, e: MouseEvent): Unit = {
     //        if (e.isConsumed) return
@@ -152,48 +152,46 @@ final class DragControl(d: impl.PaneImpl[_]) extends ControlAdapter {
 
   override def itemExited(vi: VisualItem, e: MouseEvent): Unit = {
     activeItem  = None
-    // XXX TODO
-    //    if (activePort.isDefined) {
-    //      activePort  = None
-    //      // XXX TODO d.getPorts(vi).foreach(_.active = None)
-    //      d.visualization.repaint()
-    //    }
+
+    if (activePort.isDefined) {
+      activePort  = None
+      // XXX TODO d.getPorts(vi).foreach(_.active = None)
+      d.visualization.repaint()
+    }
     d.display.setCursor(Cursor.getDefaultCursor)
     //        processMove(vi, e)
   }
 
   override def itemMoved(vi: VisualItem, e: MouseEvent): Unit = {
-    // XXX TODO val hadPort = activePort.isDefined
+    val hadPort = activePort.isDefined
     processMove(vi, e)
-    // if (activePort.isDefined != hadPort) updateCursor()
+    if (activePort.isDefined != hadPort) updateCursor()
   }
 
   override def itemPressed(vi: VisualItem, e: MouseEvent): Unit = {
     if (!SwingUtilities.isLeftMouseButton(e)) return
     // d.display.getAbsoluteCoordinate(e.getPoint(), down)
 
-    // XXX TODO
-    //    if (e.getClickCount == 2 && activePort.isEmpty) {
-    //      // XXX TODO: d.editObject(vi)
-    //    } else {
+    if (e.getClickCount == 2 && activePort.isEmpty) {
+      // XXX TODO: d.editObject(vi)
+    } else {
     dragPressed = true
-      // XXX TODO dragPort    = activePort
+      dragPort    = activePort
       dragStarted = false
       d.display.getAbsoluteCoordinate(e.getPoint, dragPoint)
-    // }
+    }
   }
 
   override def itemReleased(vi: VisualItem, e: MouseEvent): Unit = {
     if (!dragPressed) return
 
-    // XXX TODO
-    //    if (dragPort.isDefined) {
-    //      dragPort = None
-    //      if (dragStarted) {
-    //        d.display.removePaintListener(Rubberband)
-    //        Rubberband.end()
-    //      }
-    //    }
+    if (dragPort.isDefined) {
+      dragPort = None
+      if (dragStarted) {
+        d.display.removePaintListener(Rubberband)
+        Rubberband.end()
+      }
+    }
 
     dragPressed = false
     dragStarted = false
@@ -213,21 +211,18 @@ final class DragControl(d: impl.PaneImpl[_]) extends ControlAdapter {
       if (dist < 4) return
     }
 
-    // XXX TODO
-    //    dragPort match {
-    //      case Some(port) =>
-    //        if (!dragStarted) {
-    //          // XXX TODO
-    //          //          d.getPorts(vi).foreach { ports =>
-    //          //            Rubberband.reset(vi, ports, port, dragTemp)
-    //          //            d.display.addPaintListener(Rubberband)
-    //          //          }
-    //        } else {
-    //          Rubberband.drag(dragTemp)
-    //        }
-    //
-    //      case _ =>
-    val x   = vi.getX
+    dragPort match {
+      case Some(port) =>
+        if (!dragStarted)
+          d.getPorts(vi).foreach { ports =>
+            Rubberband.reset(vi, ports, port, dragTemp)
+            d.display.addPaintListener(Rubberband)
+          }
+        else
+          Rubberband.drag(dragTemp)
+
+      case _ =>
+        val x   = vi.getX
         val y   = vi.getY
 
         vi.setStartX(x)
@@ -238,7 +233,7 @@ final class DragControl(d: impl.PaneImpl[_]) extends ControlAdapter {
         vi.setEndY  (y + dy)
 
         vi.getVisualization.repaint()
-    // }
+    }
 
     dragPoint.setLocation(dragTemp)
     dragStarted = true
