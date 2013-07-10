@@ -36,7 +36,7 @@ object DragControl {
 final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter {
   import DragControl._
 
-  val mousePoint = new Point2D.Float()  // in virtual space
+  private val _mousePoint = new Point2D.Float()  // in virtual space
   private var activeItem  = Option.empty[VisualItem]
   private var activePort  = Option.empty[Port]
 
@@ -46,6 +46,8 @@ final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter
   private var dragPort    = Option.empty[Port]
 
   private val dragTemp    = new Point2D.Float
+
+  def mousePoint: Point2D = new Point2D.Float(_mousePoint.x, _mousePoint.y)
 
   private object Rubberband extends PaintListener {
     private val line    = new Line2D.Float
@@ -107,8 +109,8 @@ final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter
 
   private def reportMouse(e: MouseEvent): Unit = {
     val at = d.display.getInverseTransform
-    at.transform(e.getPoint, mousePoint)
-    //println(s"mouse screen ${e.getPoint} - virt ${mousePoint}")
+    at.transform(e.getPoint, _mousePoint)
+    //println(s"mouse screen ${e.getPoint} - virt ${_mousePoint}")
   }
 
   private def findPort(seq: Vec[Rectangle2D], tx: Double, ty: Double): Int = seq.indexWhere { r =>
@@ -117,8 +119,8 @@ final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter
 
   private def detectPort(ports: VisualPorts, vi: VisualItem, e: MouseEvent): Option[Port] = {
     val b     = vi.getBounds
-    val tx    = mousePoint.getX - b.getX
-    val ty    = mousePoint.getY - b.getY
+    val tx    = _mousePoint.getX - b.getX
+    val ty    = _mousePoint.getY - b.getY
     val idxIn = findPort(ports.inlets, tx, ty)
     if (idxIn >= 0) Some(Port.In(idxIn)) else {
       val idxOut = findPort(ports.outlets, tx, ty)

@@ -19,12 +19,13 @@ import prefuse.controls.{ZoomControl, PanControl}
 import java.awt.Rectangle
 import javax.swing.event.{DocumentListener, DocumentEvent}
 
-// XXX TODO: requires call on EDT
+// XXX TODO: requires call on EDT; iterate over initial content of patcher; disposal
 object PaneImpl {
   def apply[S <: Sys[S]](patcher: Patcher[S], config: Pane.Config[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): PaneImpl[S] = {
-    val cueMap = tx.newInMemoryIDMap[PutMetaData]
-    val res = new Impl[S](tx.newHandle(patcher), cueMap, config)
+    val cueMap  = tx.newInMemoryIDMap[PutMetaData]
+    val viewMap = tx.newInMemoryIDMap[VisualElementT[S]]
+    val res = new Impl[S](tx.newHandle(patcher), viewMap, cueMap, config)
     patcher.changed.react { implicit tx => { upd =>
       upd.changes.foreach {
         case Patcher.Added  (elem) => res.elemAdded  (elem)
@@ -45,8 +46,9 @@ object PaneImpl {
   // private final val COL_PORTS     = "ports"
 
   private final class Impl[S <: Sys[S]](patcher: stm.Source[S#Tx, Patcher[S]],
-                                        cueMap: IdentifierMap[S#ID, S#Tx, PutMetaData],
-                                        config: Pane.Config[S])
+                                        viewMap: IdentifierMap[S#ID, S#Tx, VisualElementT[S]],
+                                        cueMap : IdentifierMap[S#ID, S#Tx, PutMetaData],
+                                        config : Pane.Config[S])
                                        (implicit cursor: stm.Cursor[S]) extends PaneImpl[S] {
     val imp = ExprImplicits[S]
     import imp._
@@ -88,6 +90,7 @@ object PaneImpl {
 
     private def put(edit: Boolean = false)(elem: S#Tx => Attribute[S]): Unit = {
       val mp  = lastMousePoint()
+      mp.setLocation(mp.getX - 2, mp.getY - 2)
       val cue = PutMetaData(mp, edit)
       cursor.step { implicit tx =>
         val e = elem(tx)
@@ -100,20 +103,24 @@ object PaneImpl {
     def elemAdded(elem: Attribute[S])(implicit tx: S#Tx): Unit = {
       val dataOpt = elem match {
         case a: Attribute.Int[S]      => Some(new VisualInt              [S](tx.newHandle(a), a.peer.value))
+        case a: Attribute.Boolean[S]  => Some(new VisualBoolean          [S](tx.newHandle(a), a.peer.value))
         case a: IncompleteElement[S]  => Some(new VisualIncompleteElement[S](tx.newHandle(a), a.peer.value))
         case _ => None
       }
       dataOpt.foreach { data =>
+        viewMap.put(elem.id, data)
         val cueOpt = cueMap.get(elem.id)
         if (cueOpt.nonEmpty) cueMap.remove(elem.id)
         // println(s"Get cue $cueOpt")
         guiFromTx {
           val n       = g.addNode()
           n.set(COL_ELEM, data)
+          data.init(n)
+
           val vi      = visualization.getVisualItem(GROUP_GRAPH, n)
           val mp      = cueOpt.map(_.point).getOrElse(lastMousePoint())
-          vi.setX(mp.getX - 2)
-          vi.setY(mp.getY - 2)
+          vi.setX(mp.getX)
+          vi.setY(mp.getY)
           // val ports = new VisualPorts(numIns = 0, numOuts = 1)
           data.ports.update(vi.getBounds)
           // vi.set(COL_PORTS, ports)
@@ -124,7 +131,18 @@ object PaneImpl {
     }
 
     def elemRemoved(elem: Attribute[S])(implicit tx: S#Tx): Unit = {
-      println("TODO: remove")
+      val dataOpt = viewMap.get(elem.id)
+      cueMap.remove(elem.id)
+
+      dataOpt.foreach { data =>
+        viewMap.remove(elem.id)
+        guiFromTx {
+          data.node.foreach { n =>
+            g.removeNode(n)
+            visualization.repaint()
+          }
+        }
+      }
     }
 
     val component = Component.wrap(display)

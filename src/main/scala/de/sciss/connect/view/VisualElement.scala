@@ -4,6 +4,7 @@ package view
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.{Attribute, Sys}
 import de.sciss.connect.view.impl.StringRenderer
+import prefuse.data.Node
 
 sealed trait VisualElement /* [S <: Sys[S]] */ {
   //  var name: String = ""
@@ -16,6 +17,19 @@ sealed trait VisualElement /* [S <: Sys[S]] */ {
   def ports: VisualPorts
 
   def value: Any
+
+  private var _node = Option.empty[Node]
+
+  def init(node: Node) {
+    requireEDT()
+    require(_node.isEmpty, "Already initialized")
+    _node = Some(node)
+  }
+
+  def node: Option[Node] = {
+    requireEDT()
+    _node
+  }
 }
 
 sealed trait VisualElementT[S <: Sys[S]] extends VisualElement
@@ -54,5 +68,5 @@ class VisualBoolean[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Boolean[
 
   val ports = new VisualPorts(numIns = 0, numOuts = 1)
 
-  def renderer: ElementRenderer = ???
+  def renderer: ElementRenderer = StringRenderer
 }

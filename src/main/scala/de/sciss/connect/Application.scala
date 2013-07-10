@@ -29,8 +29,11 @@ object Application extends SwingApplicationImpl("Connect") {
     val imp = ExprImplicits[S]
     import imp._
 
+    if (name.isEmpty) return None
+
     val name1 = name.trim
-    if (name1.forall(_.isDigit)) {
+    val ch1   = name1.charAt(0)
+    if ((ch1 == '-' || ch1.isDigit) && name1.substring(1).forall(_.isDigit)) {
       val i = name.toInt
       val v = Ints.newVar[S](i)
       val a = Attribute.Int(v)
