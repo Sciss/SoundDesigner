@@ -31,7 +31,7 @@ class VisualProduct[S <: Sys[S]](val source: stm.Source[S#Tx, Product[S]], var v
   def renderer: ElementRenderer = ???
 }
 
-class VisualIncompleteProduct[S <: Sys[S]](val source: stm.Source[S#Tx, IncompleteProduct[S]], var value: String)
+class VisualIncompleteElement[S <: Sys[S]](val source: stm.Source[S#Tx, IncompleteElement[S]], var value: String)
   extends VisualElementT[S] {
 
   override def defaultState = ElementState.Edit

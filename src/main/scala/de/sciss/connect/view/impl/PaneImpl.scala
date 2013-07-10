@@ -22,7 +22,7 @@ import javax.swing.event.{DocumentListener, DocumentEvent}
 // XXX TODO: requires call on EDT
 object PaneImpl {
   def apply[S <: Sys[S]](patcher: Patcher[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): PaneImpl[S] = {
-    val cueMap = tx.newInMemoryIDMap[ClickCue]
+    val cueMap = tx.newInMemoryIDMap[PutMetaData]
     val res = new Impl[S](tx.newHandle(patcher), cueMap)
     patcher.changed.react { implicit tx => { upd =>
       upd.changes.foreach {
@@ -37,14 +37,14 @@ object PaneImpl {
     res
   }
 
-  private case class ClickCue(point: Point2D)
+  private case class PutMetaData(point: Point2D, edit: Boolean)
 
   private final val GROUP_GRAPH   = "graph"
   private final val COL_ELEM      = "element"
   // private final val COL_PORTS     = "ports"
 
   private final class Impl[S <: Sys[S]](patcher: stm.Source[S#Tx, Patcher[S]],
-                                        cueMap: IdentifierMap[S#ID, S#Tx, ClickCue])
+                                        cueMap: IdentifierMap[S#ID, S#Tx, PutMetaData])
                                        (implicit cursor: stm.Cursor[S]) extends PaneImpl[S] {
     val imp = ExprImplicits[S]
     import imp._
@@ -65,7 +65,7 @@ object PaneImpl {
       import KeyStrokes._
       imap.put(menu1 + VK_1, "designer.putObject")
       amap.put("designer.putObject", Action("putObject") {
-        put(edit = true) { implicit tx => IncompleteProduct[S]() }
+        put(edit = true) { implicit tx => IncompleteElement[S]() }
       }.peer)
       imap.put(menu1 + VK_3, "designer.putInt")
       amap.put("designer.putInt", Action("putInt") {
@@ -86,22 +86,19 @@ object PaneImpl {
 
     private def put(edit: Boolean = false)(elem: S#Tx => Attribute[S]): Unit = {
       val mp  = lastMousePoint()
-      val cue = ClickCue(mp)
+      val cue = PutMetaData(mp, edit)
       cursor.step { implicit tx =>
         val e = elem(tx)
         // println(s"Put cue $cue")
         cueMap.put(e.id, cue)
         patcher().add(e)
       }
-      if (edit) {
-        println("TODO: enter edit")
-      }
     }
 
     def elemAdded(elem: Attribute[S])(implicit tx: S#Tx): Unit = {
       val dataOpt = elem match {
         case a: Attribute.Int[S]      => Some(new VisualInt              [S](tx.newHandle(a), a.peer.value))
-        case a: IncompleteProduct[S]  => Some(new VisualIncompleteProduct[S](tx.newHandle(a), a.peer.value))
+        case a: IncompleteElement[S]  => Some(new VisualIncompleteElement[S](tx.newHandle(a), a.peer.value))
         case _ => None
       }
       dataOpt.foreach { data =>
@@ -117,7 +114,7 @@ object PaneImpl {
           // val ports = new VisualPorts(numIns = 0, numOuts = 1)
           data.ports.update(vi.getBounds)
           // vi.set(COL_PORTS, ports)
-          // editObject(vi)
+          if (cueOpt.exists(_.edit)) editObject(vi)
           visualization.repaint()
         }
       }
@@ -143,7 +140,7 @@ object PaneImpl {
     }
 
     def editObject(vi: VisualItem): Unit = getData(vi).foreach {
-      case data: VisualIncompleteProduct[S] =>
+      case data: VisualIncompleteElement[S] =>
         val r = updateEditingBounds(vi)
         editingNode     = Some(vi)
         editingOldText  = data.value
@@ -159,7 +156,7 @@ object PaneImpl {
         getData(vi).foreach { data =>
           // data.name = txt
           data match {
-            case vge: VisualIncompleteProduct[S] =>
+            case vge: VisualIncompleteElement[S] =>
               vge.value = txt
               if (vge.value != editingOldText) {
                 // val n = vge.value
@@ -209,7 +206,7 @@ object PaneImpl {
           def refreshBox() {
             editingNode.foreach { vi =>
               getData(vi).foreach {
-                case data: VisualIncompleteProduct[S] =>
+                case data: VisualIncompleteElement[S] =>
                   data.value = tf.getText
                   //                vi.set(COL_ELEM, data)
                   //                vis.repaint()
