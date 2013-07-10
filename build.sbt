@@ -22,7 +22,7 @@ libraryDependencies ++= {
     "de.sciss" %% "scalacolliderswing"      % "1.8.+",          // some graphical features for ScalaCollider
     "de.sciss" %  "scalacolliderugens-spec" % "1.6.+",          // UGen specs used in the patcher class
     "de.sciss" %% "desktop"                 % "0.3.2+",         // application framework
-    "de.sciss" %% "soundprocesses"          % "1.8.+"
+    "de.sciss" %% "soundprocesses"          % "1.9.+"
   )
 }
 
