@@ -14,8 +14,7 @@ object Application extends SwingApplicationImpl("Connect") {
   type S        = InMemory
   val  S        = InMemory
 
-  override protected def init() {
-
+  override protected def init(): Unit = {
     implicit val system = S()
     val pane = system.step { implicit tx =>
       val patcher     = Patcher[S]

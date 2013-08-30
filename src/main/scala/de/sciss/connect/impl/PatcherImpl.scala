@@ -38,21 +38,13 @@ object PatcherImpl {
 
     protected def reader: evt.Reader[S, Patcher[S]] = serializer[S]
 
-    def connect()(implicit tx: S#Tx) {
-      list.changed ---> this
-    }
-
-    def disconnect()(implicit tx: S#Tx) {
-      list.changed -/-> this
-    }
+    def connect   ()(implicit tx: S#Tx): Unit = list.changed ---> this
+    def disconnect()(implicit tx: S#Tx): Unit = list.changed -/-> this
 
     def nodeIterator(implicit tx: S#Tx): data.Iterator[S#Tx, Attribute[S]] = list.iterator
 
-    def addNode(elem: Attribute[S])(implicit tx: S#Tx) {
-      list.addLast(elem)
-    }
-
-    def removeNode(elem: Attribute[S])(implicit tx: S#Tx): Boolean = list.remove(elem)
+    def addNode   (elem: Attribute[S])(implicit tx: S#Tx): Unit    = list.addLast(elem)
+    def removeNode(elem: Attribute[S])(implicit tx: S#Tx): Boolean = list.remove (elem)
 
     def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Patcher.Update[S]] =
       pull(list.changed).map { ll =>
@@ -64,12 +56,8 @@ object PatcherImpl {
         Patcher.Update(patcher, ch)
       }
 
-    protected def writeData(out: DataOutput) {
-      list.write(out)
-    }
+    protected def writeData(out: DataOutput): Unit = list.write(out)
 
-    protected def disposeData()(implicit tx: S#Tx) {
-      list.dispose()
-    }
+    protected def disposeData()(implicit tx: S#Tx): Unit = list.dispose()
   }
 }

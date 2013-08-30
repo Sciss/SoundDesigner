@@ -5,9 +5,8 @@ import de.sciss.serial.{DataOutput, DataInput, ImmutableSerializer}
 
 // No need to write the actual spec, just look it up in the dictionary
 object UGenSpecSerializer extends ImmutableSerializer[UGenSpec] {
-  def write(v: UGenSpec, out: DataOutput) {
+  def write(v: UGenSpec, out: DataOutput): Unit =
     out.writeUTF(v.name)
-  }
 
   def read(in: DataInput): UGenSpec = UGenSpec.standardUGens(in.readUTF())
 }

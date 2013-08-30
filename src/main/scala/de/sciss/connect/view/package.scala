@@ -11,7 +11,7 @@ package object view {
   private val guiCode = TxnLocal(init = Vec.empty[() => Unit], afterCommit = handleGUI)
   //   private lazy val primaryMod   = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
 
-  private def handleGUI(seq: Vec[() => Unit]) {
+  private def handleGUI(seq: Vec[() => Unit]): Unit = {
     def exec() {
       seq.foreach { fun =>
         try {
@@ -24,11 +24,10 @@ package object view {
     execInGUI(exec())
   }
 
-  def requireEDT() {
+  def requireEDT(): Unit =
     require(EventQueue.isDispatchThread, "Called outside event dispatch thread")
-  }
 
-  def execInGUI(code: => Unit) {
+  def execInGUI(code: => Unit): Unit = {
     require(ScalaTxn.findCurrent.isEmpty, "Calling inside transaction")
     if (EventQueue.isDispatchThread)
       code
@@ -38,7 +37,7 @@ package object view {
       })
   }
 
-  def guiFromTx(body: => Unit)(implicit tx: Txn[_]) {
+  def guiFromTx(body: => Unit)(implicit tx: Txn[_]): Unit = {
     //      STMTxn.afterCommit( _ => body )( tx.peer )
     guiCode.transform(_ :+ (() => body))(tx.peer)
   }

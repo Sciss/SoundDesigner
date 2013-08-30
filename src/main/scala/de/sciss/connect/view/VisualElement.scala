@@ -21,7 +21,7 @@ sealed trait VisualElement /* [S <: Sys[S]] */ {
 
   private var _node = Option.empty[Node]
 
-  def init(node: Node) {
+  def init(node: Node): Unit = {
     requireEDT()
     require(_node.isEmpty, "Already initialized")
     _node = Some(node)

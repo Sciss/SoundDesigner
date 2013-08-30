@@ -221,7 +221,7 @@ object PaneImpl {
         tf.setForeground(Style.selectionColor)
         tf.setBackground(Style.boxColor)
         tf.getDocument.addDocumentListener(new DocumentListener {
-          def refreshBox() {
+          def refreshBox(): Unit =
             editingNode.foreach { vi =>
               getData(vi).foreach {
                 case data: VisualIncompleteElement[S] =>
@@ -235,17 +235,14 @@ object PaneImpl {
 
                 case _ =>
               }
-            }
           }
 
-          def insertUpdate( e: DocumentEvent) { refreshBox() }
-          def removeUpdate( e: DocumentEvent) { refreshBox() }
-          def changedUpdate(e: DocumentEvent) { refreshBox() }
+          def insertUpdate( e: DocumentEvent): Unit = refreshBox()
+          def removeUpdate( e: DocumentEvent): Unit = refreshBox()
+          def changedUpdate(e: DocumentEvent): Unit = refreshBox()
         })
         tf.addActionListener(new ActionListener {
-          def actionPerformed(e: ActionEvent) {
-            stopEditing()
-          }
+          def actionPerformed(e: ActionEvent): Unit = stopEditing()
       })
     }
   }

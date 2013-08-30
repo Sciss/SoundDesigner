@@ -34,9 +34,7 @@ object UGenSourceImpl extends AttributeImpl.Companion[UGenSource] {
 
     // protected def peerEvent = evt.Dummy[S, Any, UGenSource[S]]
 
-    def mkCopy()(implicit tx: S#Tx): UGenSource[S] = {
-      apply(peer)
-    }
+    def mkCopy()(implicit tx: S#Tx): UGenSource[S] = apply(peer)
 
     protected def writeData(out: DataOutput): Unit = {
       out.writeInt(typeID)
@@ -47,6 +45,6 @@ object UGenSourceImpl extends AttributeImpl.Companion[UGenSource] {
 
     def select(slot: Int) = sys.error("Not an actual Node") // XXX TODO ugly
 
-    def changed = evt.Dummy[S, Update[S], Attribute[S]]
+    def changed = evt.Dummy[S, Update[S]]
   }
 }

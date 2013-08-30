@@ -23,13 +23,13 @@ private[designer] object DesignerViewImpl {
   private val Collection = UGenSpec.standardUGens
 
   private final val GROUP_GRAPH   = "graph"
-//  private final val GROUP_NODES   = "graph.nodes"
-//  private final val GROUP_EDGES   = "graph.edges"
+  //  private final val GROUP_NODES   = "graph.nodes"
+  //  private final val GROUP_EDGES   = "graph.edges"
   private final val COL_ELEM      = "element"
   private final val COL_PORTS     = "ports"
 
   private final class View extends DesignerViewImpl {
-//    private var mode: Mode = Mode.Select
+    //    private var mode: Mode = Mode.Select
 
     private var editingNode     = Option.empty[VisualItem]
     private var editingOldText  = ""
@@ -53,54 +53,9 @@ private[designer] object DesignerViewImpl {
     private val vg  = visualization.addGraph(GROUP_GRAPH, g)
     vg.addColumn(COL_PORTS, classOf[VisualPorts])
 
-    //    disp.addPaintListener(new PaintListener {
-    //      def prePaint(p1: Display, p2: Graphics2D) {
-    //        sys.error("TODO")
-    //      }
-    //
-    //      def postPaint(p1: Display, p2: Graphics2D) {
-    //        sys.error("TODO")
-    //      }
-    //    })
-
-    //    disp.addControlListener(new ControlAdapter {
-    //
-    //    })
-
-    //    // ControlAdapter branches into all sorts
-    //    // of methods when mouse is over visual item,
-    //    // so a plain mouse listener is more useful here
-    //    val mouseCoordListener = new MouseInputAdapter {
-    //      override def mouseDragged(e: MouseEvent) {
-    //        reportMouse(e)
-    //      }
-    //      override def mouseMoved(e: MouseEvent) {
-    //        reportMouse(e)
-    //      }
-    //      override def mouseEntered(e: MouseEvent) {
-    //        reportMouse(e)
-    //      }
-    //    }
-
-    //    disp.addMouseListener(mouseCoordListener)
-    //    disp.addMouseMotionListener(mouseCoordListener)
-    //    disp.addControlListener(TestControl)
     display.addControlListener(dragControl)
-    //    disp.addControlListener(new DragControl())
-    //    disp.addControlListener(new ZoomingPanControl())
     display.addControlListener(new PanControl())
     display.addControlListener(new ZoomControl())
-
-    //    disp.setTextEditor(TextEditor)
-
-    //    object TestControl extends ControlAdapter {
-    //      override def itemEntered(vi: VisualItem, e: MouseEvent) {
-    //        if (e.isAltDown) {
-    //          println("TEST CONSUME")
-    //          e.consume()
-    //        }
-    //      }
-    //    }
 
     def getData( vi: VisualItem): Option[VisualElement] = Option(vi.get(COL_ELEM ).asInstanceOf[VisualElement])
     def getPorts(vi: VisualItem): Option[VisualPorts  ] = Option(vi.get(COL_PORTS).asInstanceOf[VisualPorts  ])
@@ -119,10 +74,10 @@ private[designer] object DesignerViewImpl {
                 val i = n.indexOf('.')
                 val (name, rate) = if (i > 0) {
                   val rOpt = PartialFunction.condOpt(n.substring(i + 1)) {
-                    case audio.methodName   => audio
+                    case audio  .methodName => audio
                     case control.methodName => control
-                    case scalar.methodName  => scalar
-                    case demand.methodName  => demand
+                    case scalar .methodName => scalar
+                    case demand .methodName => demand
                   }
                   rOpt match {
                     case Some(r)  => n.substring(0, i) -> r
@@ -158,28 +113,25 @@ private[designer] object DesignerViewImpl {
         tf.setForeground(Style.selectionColor)
         tf.setBackground(Style.boxColor)
         tf.getDocument.addDocumentListener(new DocumentListener {
-          def refreshBox() {
+          def refreshBox(): Unit =
             editingNode.foreach { vi =>
               getData(vi).foreach { data =>
                 data.name = tf.getText
-//                vi.set(COL_ELEM, data)
-//                vis.repaint()
+                //                vi.set(COL_ELEM, data)
+                //                vis.repaint()
                 val r = updateEditingBounds(vi)
-//                println("BOUNDS " + r)
+                //                println("BOUNDS " + r)
                 tf.setSize(r.getSize)
                 visualization.repaint()
               }
             }
-          }
 
-          def insertUpdate( e: DocumentEvent) { refreshBox() }
-          def removeUpdate( e: DocumentEvent) { refreshBox() }
-          def changedUpdate(e: DocumentEvent) { refreshBox() }
+          def insertUpdate( e: DocumentEvent): Unit = refreshBox()
+          def removeUpdate( e: DocumentEvent): Unit = refreshBox()
+          def changedUpdate(e: DocumentEvent): Unit = refreshBox()
         })
         tf.addActionListener(new ActionListener {
-          def actionPerformed(e: ActionEvent) {
-            stopEditing()
-          }
+          def actionPerformed(e: ActionEvent): Unit = stopEditing()
       })
     }
 
@@ -223,8 +175,6 @@ private[designer] object DesignerViewImpl {
       centerOnScreen()
       open()
     }
-
-    //    vis.putAction(ACTION_REPAINT, new RepaintAction())
 
     private def updateEditingBounds(vi: VisualItem): Rectangle = {
       //      vi.validateBounds()

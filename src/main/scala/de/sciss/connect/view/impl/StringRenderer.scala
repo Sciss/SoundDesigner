@@ -22,7 +22,7 @@ trait StringRendererLike extends ElementRenderer {
     r
   }
 
-  def paint(g: Graphics2D, bounds: Rectangle2D, data: VisualElement) {
+  def paint(g: Graphics2D, bounds: Rectangle2D, data: VisualElement): Unit = {
     val x   = bounds.getX.toFloat
     val y   = bounds.getY.toFloat
     // g.setFont(Style.font)
@@ -47,7 +47,7 @@ object BooleanRenderer extends ElementRenderer {
     r
   }
 
-  def paint(g: Graphics2D, bounds: Rectangle2D, data: VisualElement) {
+  def paint(g: Graphics2D, bounds: Rectangle2D, data: VisualElement): Unit =
     data.value match {
       case true =>
         g.setColor(Color.black)
@@ -57,7 +57,6 @@ object BooleanRenderer extends ElementRenderer {
         g.draw(ln)
       case _ =>
     }
-  }
 }
 object UGenSourceRenderer extends StringRendererLike {
   protected def dataToString(data: VisualElement) = data.value match {
