@@ -104,7 +104,7 @@ object PaneImpl {
       val dataOpt = elem match {
         case a: Attribute.Int[S]      => Some(new VisualInt              [S](tx.newHandle(a), a.peer.value))
         case a: Attribute.Boolean[S]  => Some(new VisualBoolean          [S](tx.newHandle(a), a.peer.value))
-        case a: UGenSource[S]         => Some(new VisualUGenSource       [S](tx.newHandle(a), a.peer      ))
+        case a: UGenSource[S]         => Some(new VisualUGenSource       [S](tx.newHandle(a), a.spec      ))
         case a: IncompleteElement[S]  => Some(new VisualIncompleteElement[S](tx.newHandle(a), a.peer.value))
         case _ => None
       }

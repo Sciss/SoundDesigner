@@ -18,7 +18,9 @@ trait UGenSource[S <: evt.Sys[S]] extends Attribute[S] {
   //
   //  def spec: UGenSpec
 
-  type Peer = UGenSpec
+  type Peer = UGenSource[S] // UGenSpec
+
+  def spec: UGenSpec
 
   def mkCopy()(implicit tx: S#Tx): UGenSource[S]
 }

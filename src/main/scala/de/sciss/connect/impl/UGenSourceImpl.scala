@@ -26,19 +26,21 @@ object UGenSourceImpl extends AttributeImpl.Companion[UGenSource] {
   }
 
   private final class Impl[S <: evt.Sys[S]](val targets: evt.Targets[S],
-                                            val peer: UGenSpec)
+                                            val spec: UGenSpec)
     extends Attribute[S] with evt.Node[S] with UGenSource[S] {
 
     def typeID = UGenSourceImpl.typeID
     def prefix = "UGenSource"
 
+    def peer = this
+
     // protected def peerEvent = evt.Dummy[S, Any, UGenSource[S]]
 
-    def mkCopy()(implicit tx: S#Tx): UGenSource[S] = apply(peer)
+    def mkCopy()(implicit tx: S#Tx): UGenSource[S] = apply(spec)
 
     protected def writeData(out: DataOutput): Unit = {
       out.writeInt(typeID)
-      UGenSpecSerializer.write(peer, out)
+      UGenSpecSerializer.write(spec, out)
     }
 
     protected def disposeData()(implicit tx: S#Tx) = ()
