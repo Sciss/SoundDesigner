@@ -2,11 +2,11 @@ package de.sciss.connect
 package view
 package impl
 
-import prefuse.render.{AbstractShapeRenderer, EdgeRenderer}
+import prefuse.render.AbstractShapeRenderer
 import de.sciss.lucre.synth.Sys
 import java.awt.{RenderingHints, BasicStroke, Shape, Graphics2D}
 import prefuse.visual.{EdgeItem, VisualItem}
-import java.awt.geom.{Line2D, AffineTransform, Point2D}
+import java.awt.geom.Line2D
 
 object CableRenderer {
   private final val portColr  = Style.portColor

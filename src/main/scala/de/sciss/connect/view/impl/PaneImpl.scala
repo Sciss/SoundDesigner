@@ -110,7 +110,7 @@ object PaneImpl {
     }
 
     private def addEdge(c: Connection[S])(implicit tx: S#Tx): Unit = {
-      println(s"addEdge($c")
+      // println(s"addEdge($c")
       for {
         sourceData <- viewMap.get(c.source._1.id)
         sinkData   <- viewMap.get(c.sink  ._1.id)
@@ -272,8 +272,8 @@ object PaneImpl {
               }
           }
 
-          def insertUpdate( e: DocumentEvent): Unit = refreshBox()
-          def removeUpdate( e: DocumentEvent): Unit = refreshBox()
+          def insertUpdate (e: DocumentEvent): Unit = refreshBox()
+          def removeUpdate (e: DocumentEvent): Unit = refreshBox()
           def changedUpdate(e: DocumentEvent): Unit = refreshBox()
         })
         tf.addActionListener(new ActionListener {
