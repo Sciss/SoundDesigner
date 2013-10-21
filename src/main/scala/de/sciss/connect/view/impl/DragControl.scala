@@ -10,7 +10,7 @@ import javax.swing.SwingUtilities
 import prefuse.util.display.PaintListener
 import prefuse.Display
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.connect.view.{VisualElementT, Port, VisualPorts, impl}
+import de.sciss.connect.view.{VisualBox, Port, VisualPorts, impl}
 import de.sciss.lucre.synth.Sys
 
 // TODO: add TableListener to react to items disappearing (see original DragControl)
@@ -59,23 +59,23 @@ final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter
   }
   private sealed trait DragSome extends DragMaybe {
     def originVi  : VisualItem
-    def originData: VisualElementT[S]
+    def originData: VisualBox[S]
     def foreach(fun: DragSome => Unit): Unit = fun(this)
   }
-  private case class DragBox  (originVi: VisualItem, originData: VisualElementT[S]) extends DragSome {
+  private case class DragBox  (originVi: VisualItem, originData: VisualBox[S]) extends DragSome {
     def isBox = true
   }
   private sealed trait DragMaybeHover
   private sealed trait DragHoverOrCable extends DragSome with DragMaybeHover {
     def originVi  : VisualItem
-    def originData: VisualElementT[S]
+    def originData: VisualBox[S]
     def originPort: Port
 
     def isBox = false
 
     def open(point: Point2D): DragCableOpen = DragCableOpen(originVi, originData, originPort, point)
   }
-  private case class DragHover(originVi: VisualItem, originData: VisualElementT[S], originPort: Port)
+  private case class DragHover(originVi: VisualItem, originData: VisualBox[S], originPort: Port)
     extends DragHoverOrCable
 
 
@@ -91,20 +91,20 @@ final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter
       new Point2D.Double(rx, ry)
     }
   }
-  private case class DragCableOpen(originVi: VisualItem, originData: VisualElementT[S], originPort: Port,
+  private case class DragCableOpen(originVi: VisualItem, originData: VisualBox[S], originPort: Port,
                                    targetPoint: Point2D)
     extends DragSomeCable
 
   private sealed trait DragCableClosed extends DragSomeCable {
     def sourceVi  : VisualItem
-    def sourceData: VisualElementT[S]
+    def sourceData: VisualBox[S]
     def sourcePort: Port.Out
     def sinkVi    : VisualItem
-    def sinkData  : VisualElementT[S]
+    def sinkData  : VisualBox[S]
     def sinkPort  : Port.In
 
     def targetVi  : VisualItem
-    def targetData: VisualElementT[S]
+    def targetData: VisualBox[S]
     def targetPort: Port
 
     def targetPoint: Point2D = {
@@ -115,8 +115,8 @@ final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter
       new Point2D.Double(rx, ry)
     }
   }
-  private case class DragSourceToSink(originVi: VisualItem, originData: VisualElementT[S], originPort: Port.Out,
-                                      targetVi: VisualItem, targetData: VisualElementT[S], targetPort: Port.In)
+  private case class DragSourceToSink(originVi: VisualItem, originData: VisualBox[S], originPort: Port.Out,
+                                      targetVi: VisualItem, targetData: VisualBox[S], targetPort: Port.In)
     extends DragCableClosed {
 
     def sourceVi    = originVi
@@ -127,8 +127,8 @@ final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter
     def sinkData    = targetData
     def sinkPort    = targetPort
   }
-  private case class DragSinkToSource(originVi: VisualItem, originData: VisualElementT[S], originPort: Port.In,
-                                      targetVi: VisualItem, targetData: VisualElementT[S], targetPort: Port.Out)
+  private case class DragSinkToSource(originVi: VisualItem, originData: VisualBox[S], originPort: Port.In,
+                                      targetVi: VisualItem, targetData: VisualBox[S], targetPort: Port.Out)
     extends DragCableClosed {
 
     def sourceVi    = targetVi
@@ -186,7 +186,7 @@ final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter
   private def processMove(vi: VisualItem, e: MouseEvent): Unit = {
     reportMouse(e)
 
-    hover = d.getData(vi).fold[DragMaybe](DragNone) { data =>
+    hover = d.getNodeData(vi).fold[DragMaybe](DragNone) { data =>
       val ports = data.ports
       val port  = detectPort(ports, vi, e)
       val h     = port.fold[DragMaybe](DragBox(vi, data))(DragHover(vi, data, _))
@@ -247,9 +247,11 @@ final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter
 
     drag match {
       case closed: DragCableClosed =>
-        closed.sinkData match {
-          case _ =>
-        }
+        // closed.sinkData match {
+        //   case _ =>
+        // }
+        // TODO: verify that connection is legal
+        d.connect(closed.sourceData, closed.sourcePort, closed.sinkData, closed.sinkPort)
 
       case _ =>
     }
@@ -280,11 +282,12 @@ final class DragControl[S <: Sys[S]](d: impl.PaneImpl[S]) extends ControlAdapter
           // detect current sink
           val target = Option(d.display.findItem(ep)).fold[DragMaybeHover](DragNone) { tgtVi =>
             // don't allow direct connections within one object (at least for now)
-            if (tgtVi == vi) DragNone else d.getData(tgtVi).fold[DragMaybeHover](DragNone) { tgtData =>
+            if (tgtVi == vi) DragNone else d.getNodeData(tgtVi).fold[DragMaybeHover](DragNone) { tgtData =>
               detectPort(tgtData.ports, tgtVi, e).fold[DragMaybeHover](DragNone)(DragHover(tgtVi, tgtData, _))
             }
           }
 
+          // TODO: verify that connection is legal
           val newDrag = (cable.originPort, target) match {
             case (out @ Port.Out(_), DragHover(tgtVi, tgtData, in  @ Port.In (_))) =>
               DragSourceToSink(cable.originVi, cable.originData, out, tgtVi, tgtData, in )

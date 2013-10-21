@@ -9,9 +9,9 @@ import de.sciss.synth.UGenSpec
 trait StringRendererLike extends ElementRenderer {
   private val r = new Rectangle2D.Float()
 
-  protected def dataToString(data: VisualElement): String
+  protected def dataToString(data: VisualBoxLike): String
 
-  def getShape(x: Double, y: Double, data: VisualElement): Shape = {
+  def getShape(x: Double, y: Double, data: VisualBoxLike): Shape = {
     val fm    = BoxRenderer.defaultFontMetrics
     val w1    = fm.stringWidth(dataToString(data))
     val w2    = math.max(BoxRenderer.MinBoxWidth, w1 + 6)
@@ -22,7 +22,7 @@ trait StringRendererLike extends ElementRenderer {
     r
   }
 
-  def paint(g: Graphics2D, bounds: Rectangle2D, data: VisualElement): Unit = {
+  def paint(g: Graphics2D, bounds: Rectangle2D, data: VisualBoxLike): Unit = {
     val x   = bounds.getX.toFloat
     val y   = bounds.getY.toFloat
     // g.setFont(Style.font)
@@ -32,7 +32,7 @@ trait StringRendererLike extends ElementRenderer {
 }
 
 object ToStringRenderer extends StringRendererLike {
-  protected def dataToString(data: VisualElement) = data.value.toString
+  protected def dataToString(data: VisualBoxLike) = data.value.toString
 }
 
 object BooleanRenderer extends ElementRenderer {
@@ -42,12 +42,12 @@ object BooleanRenderer extends ElementRenderer {
   private val ln  = new Line2D.Float()
   private val r   = new Rectangle2D.Float()
 
-  def getShape(x: Double, y: Double, data: VisualElement): Shape = {
+  def getShape(x: Double, y: Double, data: VisualBoxLike): Shape = {
     r.setRect(x, y, DefaultWidth, DefaultHeight)
     r
   }
 
-  def paint(g: Graphics2D, bounds: Rectangle2D, data: VisualElement): Unit =
+  def paint(g: Graphics2D, bounds: Rectangle2D, data: VisualBoxLike): Unit =
     data.value match {
       case true =>
         g.setColor(Color.black)
@@ -59,7 +59,7 @@ object BooleanRenderer extends ElementRenderer {
     }
 }
 object UGenSourceRenderer extends StringRendererLike {
-  protected def dataToString(data: VisualElement) = data.value match {
+  protected def dataToString(data: VisualBoxLike) = data.value match {
     case spec: UGenSpec => spec.name
     case _ => "???"
   }

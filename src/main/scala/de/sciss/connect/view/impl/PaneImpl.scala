@@ -24,7 +24,7 @@ object PaneImpl {
   def apply[S <: Sys[S]](patcher: Patcher[S], config: Pane.Config[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): PaneImpl[S] = {
     val cueMap  = tx.newInMemoryIDMap[PutMetaData]
-    val viewMap = tx.newInMemoryIDMap[VisualElementT[S]]
+    val viewMap = tx.newInMemoryIDMap[VisualBox[S]]
     val res = new Impl[S](tx.newHandle(patcher), viewMap, cueMap, config)
     patcher.changed.react { implicit tx => { upd =>
       upd.changes.foreach {
@@ -42,11 +42,11 @@ object PaneImpl {
   private case class PutMetaData(point: Point2D, edit: Boolean)
 
   private final val GROUP_GRAPH   = "graph"
-  private final val COL_ELEM      = "element"
+  private final val COL_DATA      = "data"
   // private final val COL_PORTS     = "ports"
 
   private final class Impl[S <: Sys[S]](patcher: stm.Source[S#Tx, Patcher[S]],
-                                        viewMap: IdentifierMap[S#ID, S#Tx, VisualElementT[S]],
+                                        viewMap: IdentifierMap[S#ID, S#Tx, VisualBox[S]],
                                         cueMap : IdentifierMap[S#ID, S#Tx, PutMetaData],
                                         config : Pane.Config[S])
                                        (implicit cursor: stm.Cursor[S]) extends PaneImpl[S] {
@@ -54,7 +54,7 @@ object PaneImpl {
     import imp._
 
     val visualization = new Visualization
-    private val rf = new DefaultRendererFactory(new BoxRenderer(this))
+    private val rf = new DefaultRendererFactory(new BoxRenderer(this), new CableRenderer(this))
     visualization.setRendererFactory(rf)
 
     private var editingNode     = Option.empty[VisualItem]
@@ -78,7 +78,7 @@ object PaneImpl {
       res
     }
     private val g   = new Graph
-    g .addColumn(COL_ELEM , classOf[VisualElementT[S]])
+    g .addColumn(COL_DATA , classOf[AnyRef /* VisualBox[S] */])
     /* private val vg = */ visualization.addGraph(GROUP_GRAPH, g)
     // vg.addColumn(COL_PORTS, classOf[VisualPorts])
 
@@ -100,34 +100,52 @@ object PaneImpl {
       }
     }
 
-    def elemAdded(elem: Attribute[S])(implicit tx: S#Tx): Unit = {
-      val dataOpt = elem match {
-        case a: Attribute.Int[S]      => Some(new VisualInt              [S](tx.newHandle(a), a.peer.value))
-        case a: Attribute.Boolean[S]  => Some(new VisualBoolean          [S](tx.newHandle(a), a.peer.value))
-        case a: UGenSource[S]         => Some(new VisualUGenSource       [S](tx.newHandle(a), a.spec      ))
-        case a: IncompleteElement[S]  => Some(new VisualIncompleteElement[S](tx.newHandle(a), a.peer.value))
-        case _ => None
-      }
-      dataOpt.foreach { data =>
-        viewMap.put(elem.id, data)
-        val cueOpt = cueMap.get(elem.id)
-        if (cueOpt.nonEmpty) cueMap.remove(elem.id)
-        // println(s"Get cue $cueOpt")
-        guiFromTx {
-          val n       = g.addNode()
-          n.set(COL_ELEM, data)
-          data.init(n)
+    def elemAdded(elem: Attribute[S])(implicit tx: S#Tx): Unit = elem match {
+      case a: Attribute.Int[S]      => addVertex(elem, new VisualInt              [S](tx.newHandle(a), a.peer.value))
+      case a: Attribute.Boolean[S]  => addVertex(elem, new VisualBoolean          [S](tx.newHandle(a), a.peer.value))
+      case a: UGenSource[S]         => addVertex(elem, new VisualUGenSource       [S](tx.newHandle(a), a.spec      ))
+      case a: IncompleteElement[S]  => addVertex(elem, new VisualIncompleteElement[S](tx.newHandle(a), a.peer.value))
+      case c: Connection[S]         => addEdge(c)
+      case _                        => // ignore
+    }
 
-          val vi      = visualization.getVisualItem(GROUP_GRAPH, n)
-          val mp      = cueOpt.map(_.point).getOrElse(lastMousePoint())
-          vi.setX(mp.getX)
-          vi.setY(mp.getY)
-          // val ports = new VisualPorts(numIns = 0, numOuts = 1)
-          data.ports.update(vi.getBounds)
-          // vi.set(COL_PORTS, ports)
-          if (cueOpt.exists(_.edit)) editObject(vi)
-          visualization.repaint()
+    private def addEdge(c: Connection[S])(implicit tx: S#Tx): Unit = {
+      println(s"addEdge($c")
+      for {
+        sourceData <- viewMap.get(c.source._1.id)
+        sinkData   <- viewMap.get(c.sink  ._1.id)
+      } guiFromTx {
+        for {
+          sourceNode <- sourceData.node
+          sinkNode   <- sinkData  .node
+        } {
+          val e     = g.addEdge(sourceNode, sinkNode)
+          // println(s"edge = $e")
+          val data  = VisualEdge(c.source._2, c.sink._2)
+          e.set(COL_DATA, data)
         }
+      }
+    }
+
+    private def addVertex(elem: Attribute[S], data: VisualBox[S])(implicit tx: S#Tx): Unit = {
+      viewMap.put(elem.id, data)
+      val cueOpt = cueMap.get(elem.id)
+      if (cueOpt.nonEmpty) cueMap.remove(elem.id)
+      // println(s"Get cue $cueOpt")
+      guiFromTx {
+        val n       = g.addNode()
+        n.set(COL_DATA, data)
+        data.init(n)
+
+        val vi      = visualization.getVisualItem(GROUP_GRAPH, n)
+        val mp      = cueOpt.map(_.point).getOrElse(lastMousePoint())
+        vi.setX(mp.getX)
+        vi.setY(mp.getY)
+        // val ports = new VisualPorts(numIns = 0, numOuts = 1)
+        data.ports.update(vi.getBounds)
+        // vi.set(COL_PORTS, ports)
+        if (cueOpt.exists(_.edit)) editObject(vi)
+        visualization.repaint()
       }
     }
 
@@ -148,8 +166,18 @@ object PaneImpl {
 
     val component = Component.wrap(display)
 
-    def getData (vi: VisualItem): Option[VisualElementT[S]] = Option(vi.get(COL_ELEM ).asInstanceOf[VisualElementT[S]])
-    // def getPorts(vi: VisualItem) = Option(vi.get(COL_PORTS).asInstanceOf[VisualPorts      ])
+    // def getNodeData (vi: VisualItem): Option[VisualBox[S]] = Option(vi.get(COL_DATA ).asInstanceOf[VisualBox[S]])
+    // def getEdgeData (vi: VisualItem): Option[VisualEdge  ] = Option(vi.get(COL_DATA ).asInstanceOf[VisualEdge  ])
+
+    def getNodeData (vi: VisualItem): Option[VisualBox[S]] = vi.get(COL_DATA) match {
+      case b: VisualBox[S]  => Some(b)
+      case _                => None
+    }
+
+    def getEdgeData (vi: VisualItem): Option[VisualEdge  ] = vi.get(COL_DATA) match {
+      case e: VisualEdge    => Some(e)
+      case _                => None
+    }
 
     private def updateEditingBounds(vi: VisualItem): Rectangle = {
       //      vi.validateBounds()
@@ -161,11 +189,11 @@ object PaneImpl {
       r.y       += 1
       r.width   -= 5
       r.height  -= 2
-      getData(vi).foreach(_.ports.update(b))
+      getNodeData(vi).foreach(_.ports.update(b))
       r
     }
 
-    def editObject(vi: VisualItem): Unit = getData(vi).foreach {
+    def editObject(vi: VisualItem): Unit = getNodeData(vi).foreach {
       case data: VisualIncompleteElement[S] =>
         val r = updateEditingBounds(vi)
         editingNode     = Some(vi)
@@ -174,12 +202,23 @@ object PaneImpl {
       case _ =>
     }
 
+    def connect(source: VisualBox[S], out: Port.Out, sink: VisualBox[S], in: Port.In): Unit =
+      cursor.step { implicit tx =>
+        val sourceArt = source.source()
+        val sinkArt   = sink  .source()
+        val sourceLet = out.idx
+        val sinkLet   = in .idx
+        val conn      = Connection.apply(source = (sourceArt, sourceLet), sink = (sinkArt, sinkLet))
+        val p         = patcher()
+        p.addNode(conn)
+      }
+
     private def stopEditing(): Unit = {
       val txt = display.getTextEditor.getText
       display.stopEditing()
       editingNode.foreach { vi =>
         editingNode = None
-        getData(vi).foreach {
+        getNodeData(vi).foreach {
           case vge: VisualIncompleteElement[S] =>
             vge.value = txt
             if (vge.value != editingOldText) {
@@ -219,7 +258,7 @@ object PaneImpl {
         tf.getDocument.addDocumentListener(new DocumentListener {
           def refreshBox(): Unit =
             editingNode.foreach { vi =>
-              getData(vi).foreach {
+              getNodeData(vi).foreach {
                 case data: VisualIncompleteElement[S] =>
                   data.value = tf.getText
                   //                vi.set(COL_ELEM, data)
@@ -246,8 +285,10 @@ object PaneImpl {
 sealed trait PaneImpl[S <: Sys[S]] extends Pane[S] {
   def visualization: Visualization
   def display      : Display
-  def getData (vi: VisualItem): Option[VisualElementT[S]]
+  def getNodeData (vi: VisualItem): Option[VisualBox [S]]
+  def getEdgeData (vi: VisualItem): Option[VisualEdge /* [S] */]
   // def getPorts(vi: VisualItem): Option[VisualPorts      ]
 
   def editObject(vi: VisualItem): Unit
+  def connect(source: VisualBox[S], out: Port.Out, sink: VisualBox[S], in: Port.In): Unit
 }

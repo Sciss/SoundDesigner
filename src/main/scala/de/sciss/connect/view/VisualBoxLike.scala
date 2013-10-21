@@ -8,7 +8,7 @@ import prefuse.data.Node
 import de.sciss.synth.UGenSpec
 import de.sciss.lucre.synth.Sys
 
-sealed trait VisualElement /* [S <: Sys[S]] */ {
+sealed trait VisualBoxLike /* [S <: Sys[S]] */ {
   //  var name: String = ""
   protected def defaultState: ElementState = ElementState.Ok
 
@@ -34,7 +34,9 @@ sealed trait VisualElement /* [S <: Sys[S]] */ {
   }
 }
 
-sealed trait VisualElementT[S <: Sys[S]] extends VisualElement
+sealed trait VisualBox[S <: Sys[S]] extends VisualBoxLike {
+  def source: stm.Source[S#Tx, Attribute[S]]
+}
 
 //object VisualProduct {
 //  def unapply[S <: Sys[S]](p: VisualProduct[S]): Option[stm.Source[S#Tx, Product[S]]] = p.content
@@ -48,7 +50,7 @@ sealed trait VisualElementT[S <: Sys[S]] extends VisualElement
 //}
 
 class VisualUGenSource[S <: Sys[S]](val source: stm.Source[S#Tx, UGenSource[S]], spec: UGenSpec)
-  extends VisualElementT[S] {
+  extends VisualBox[S] {
 
   def value = spec
 
@@ -58,7 +60,7 @@ class VisualUGenSource[S <: Sys[S]](val source: stm.Source[S#Tx, UGenSource[S]],
 }
 
 class VisualIncompleteElement[S <: Sys[S]](val source: stm.Source[S#Tx, IncompleteElement[S]], var value: String)
-  extends VisualElementT[S] {
+  extends VisualBox[S] {
 
   override def defaultState = ElementState.Edit
 
@@ -68,7 +70,7 @@ class VisualIncompleteElement[S <: Sys[S]](val source: stm.Source[S#Tx, Incomple
 }
 
 class VisualInt[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Int[S]], var value: Int)
-  extends VisualElementT[S] {
+  extends VisualBox[S] {
 
   val ports = VisualPorts(numIns = 0, numOuts = 1)
 
@@ -76,9 +78,12 @@ class VisualInt[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Int[S]], var
 }
 
 class VisualBoolean[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Boolean[S]], var value: Boolean)
-  extends VisualElementT[S] {
+  extends VisualBox[S] {
 
   val ports = VisualPorts(numIns = 0, numOuts = 1)
 
   def renderer: ElementRenderer = BooleanRenderer
 }
+
+// class VisualEdge[S <: Sys[S]](val source: stm.Source[S#Tx, Connection[S]])
+case class VisualEdge(outlet: Int, inlet: Int)

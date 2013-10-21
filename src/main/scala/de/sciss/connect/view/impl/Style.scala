@@ -19,4 +19,5 @@ private[impl] object Style {
 
   final val selectionColor  = ColorLib.getColor(  0,   0, 240)
   final val boxColor        = ColorLib.getColor(246, 248, 248)
+  final val portColor       = ColorLib.getColor( 80,  80, 128)
 }

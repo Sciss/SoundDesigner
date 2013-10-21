@@ -9,7 +9,7 @@ import java.awt._
 import prefuse.visual.VisualItem
 import de.sciss.lucre.synth.Sys
 
-private[impl] object BoxRenderer {
+object BoxRenderer {
   final val MinBoxWidth         = 24
   final val DefaultBoxHeight    = 18
 
@@ -24,9 +24,9 @@ private[impl] object BoxRenderer {
   private final val textColr    = Color.black
   private final val strkShpOk   = new BasicStroke(1f)
   private final val strkShpPend = new BasicStroke(1f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 10f, Array[Float](6, 4), 0f)
-  private final val portColr    = ColorLib.getColor( 80,  80, 128)
+  private final val portColr    = Style.portColor
 }
-private[impl] final class BoxRenderer[S <: Sys[S]](d: PaneImpl[S]) extends AbstractShapeRenderer {
+final class BoxRenderer[S <: Sys[S]](d: PaneImpl[S]) extends AbstractShapeRenderer {
   import BoxRenderer._
 
   private val r   = new Rectangle2D.Float()
@@ -38,7 +38,7 @@ private[impl] final class BoxRenderer[S <: Sys[S]](d: PaneImpl[S]) extends Abstr
     var y    = vi.getY
     if (y.isNaN || y.isInfinity) y = 0.0
 
-    d.getData(vi).fold[Shape] {
+    d.getNodeData(vi).fold[Shape] {
       r.setRect(x, y, MinBoxWidth, DefaultBoxHeight)
       r
     } { data =>
@@ -52,7 +52,7 @@ private[impl] final class BoxRenderer[S <: Sys[S]](d: PaneImpl[S]) extends Abstr
     g.setColor(fillColr)
     g.fill(shp)
 
-    d.getData(vi).foreach { data =>
+    d.getNodeData(vi).foreach { data =>
       data.state match {
         case ElementState.Ok =>
           g.setColor (strkColrOk)
