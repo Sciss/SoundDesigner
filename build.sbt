@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "de.sciss" %% "soundprocesses"          % "2.0.+",
   // "de.sciss" %% "scalacollider"           % "1.10.+",         // client for SuperCollider
   "de.sciss" %% "scalacolliderswing"      % "1.10.+",         // some graphical features for ScalaCollider
-  "de.sciss" %  "scalacolliderugens-spec" % "1.7.+",          // UGen specs used in the patcher class
+  "de.sciss" %  "scalacolliderugens-spec" % "1.7.1+",         // UGen specs used in the patcher class
   "de.sciss" %% "desktop"                 % "0.3.2+"          // application framework
 )
 

@@ -3,7 +3,7 @@ package view
 
 import de.sciss.desktop.impl.WindowImpl
 import de.sciss.desktop
-import desktop.WindowHandler
+import de.sciss.desktop.WindowHandler
 import de.sciss.lucre.synth.Sys
 
 class Window[S <: Sys[S]](pane: Pane[S]) extends WindowImpl {
@@ -11,7 +11,7 @@ class Window[S <: Sys[S]](pane: Pane[S]) extends WindowImpl {
 
   protected def style = desktop.Window.Regular
 
-  // private val pane = Pane[S](patcher)
+  closeOperation = desktop.Window.CloseExit
 
   contents = pane.component
 
