@@ -1,30 +1,29 @@
 import AssemblyKeys._
 
-name := "SoundDesigner"
+name          := "SoundDesigner"
 
-version := "0.1.0-SNAPSHOT"
+version       := "0.1.0-SNAPSHOT"
 
-organization := "at.iem.sysson"
+organization  := "at.iem.sysson"
 
-description := "Interactive Sound Design Tool"
+description   := "Interactive Sound Design Tool"
 
-homepage := Some(url("https://github.com/iem-projects/SoundDesigner"))
+homepage      := Some(url("https://github.com/iem-projects/SoundDesigner"))
 
-licenses := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
+licenses      := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
 
 // ---- scala compiler settings and libraries ----
 
-scalaVersion := "2.10.2"
+scalaVersion  := "2.10.3"
 
-libraryDependencies ++= {
-  Seq(
-    "de.sciss" %% "scalacollider"           % "1.9.+",          // client for SuperCollider
-    "de.sciss" %% "scalacolliderswing"      % "1.9.+",          // some graphical features for ScalaCollider
-    "de.sciss" %  "scalacolliderugens-spec" % "1.6.2+",         // UGen specs used in the patcher class
-    "de.sciss" %% "desktop"                 % "0.3.2+",         // application framework
-    "de.sciss" %% "soundprocesses"          % "1.9.1+"
-  )
-}
+libraryDependencies ++= Seq(
+  // "de.sciss" %% "lucresynth"              % "2.0.+",
+  "de.sciss" %% "soundprocesses"          % "2.0.+",
+  // "de.sciss" %% "scalacollider"           % "1.10.+",         // client for SuperCollider
+  "de.sciss" %% "scalacolliderswing"      % "1.10.+",         // some graphical features for ScalaCollider
+  "de.sciss" %  "scalacolliderugens-spec" % "1.7.+",          // UGen specs used in the patcher class
+  "de.sciss" %% "desktop"                 % "0.3.2+"          // application framework
+)
 
 retrieveManaged := true
 
@@ -50,25 +49,24 @@ buildInfoKeys := Seq(name, organization, version, scalaVersion, description,
   BuildInfoKey.map(licenses) { case (_, Seq((lic, _))) => "license" -> lic }
 )
 
-buildInfoPackage <<= organization
+buildInfoPackage := organization.value
 
 // ---- publishing ----
 
 publishMavenStyle := true
 
-publishTo <<= version { (v: String) =>
-  Some(if (v endsWith "-SNAPSHOT")
+publishTo :=
+  Some(if (version.value endsWith "-SNAPSHOT")
     "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
   else
     "Sonatype Releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
   )
-}
 
 publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
 
-pomExtra <<= name { n =>
+pomExtra := { val n = name.value
 <scm>
   <url>git@github.com:iem-projects/{n}.git</url>
   <connection>scm:git:git@github.com:iem-projects/{n}.git</connection>
@@ -88,9 +86,9 @@ pomExtra <<= name { n =>
 
 seq(assemblySettings: _*)
 
-test in assembly := {}
+test in assembly := ()
 
-target in assembly <<= baseDirectory    // make .jar file in the main directory
+target in assembly := baseDirectory.value    // make .jar file in the main directory
 
 // mac os x
 
@@ -105,4 +103,4 @@ seq(appbundle.settings: _*)
 
 appbundle.javaOptions += "-Xmx2048m"
 
-appbundle.target <<= baseDirectory      // make .app bundle in the main directory
+appbundle.target := baseDirectory.value      // make .app bundle in the main directory

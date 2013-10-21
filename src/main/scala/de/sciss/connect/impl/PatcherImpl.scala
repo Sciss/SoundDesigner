@@ -1,11 +1,12 @@
 package de.sciss.connect
 package impl
 
-import de.sciss.synth.proc.{Attribute, InMemory, Sys}
+import de.sciss.synth.proc.Attribute
 import de.sciss.serial
 import de.sciss.lucre.{event => evt, data, expr}
 import serial.{DataInput, DataOutput}
 import expr.LinkedList
+import de.sciss.lucre.synth.{InMemory, Sys}
 
 object PatcherImpl {
   // private type Map[S <: Sys[S]] = data.SkipList.Map[S, Int, List[NodeChanged[S]]]

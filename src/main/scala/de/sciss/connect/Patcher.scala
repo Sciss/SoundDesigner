@@ -1,12 +1,12 @@
 package de.sciss
 package connect
 
-import de.sciss.synth.proc.{Attribute, Sys}
+import de.sciss.synth.proc.Attribute
 import de.sciss.lucre.{event => evt, data}
 import evt.Event
-import de.sciss.serial
 import impl.{PatcherImpl => Impl}
 import collection.immutable.{IndexedSeq => Vec}
+import de.sciss.lucre.synth.Sys
 
 object Patcher {
   // import connect.{NodeChanged => _Element}

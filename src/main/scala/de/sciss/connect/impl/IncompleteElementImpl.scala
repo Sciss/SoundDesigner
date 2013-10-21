@@ -2,11 +2,11 @@ package de.sciss
 package connect
 package impl
 
-import synth.expr.Strings
 import lucre.{event => evt, expr}
 import serial.DataInput
 import expr.Expr
 import synth.proc.impl.AttributeImpl
+import de.sciss.lucre.synth.expr.Strings
 
 object IncompleteElementImpl extends AttributeImpl.Companion[IncompleteElement] {
   final val typeID = 17

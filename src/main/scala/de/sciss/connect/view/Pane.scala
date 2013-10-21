@@ -1,11 +1,12 @@
 package de.sciss.connect
 package view
 
-import de.sciss.synth.proc.{Attribute, Sys}
+import de.sciss.synth.proc.Attribute
 import scala.swing.Component
 import de.sciss.lucre.stm
 import impl.{PaneImpl => Impl}
 import language.implicitConversions
+import de.sciss.lucre.synth.Sys
 
 object Pane {
   type Factory[S <: Sys[S]] = S#Tx => String => Option[Attribute[S]]

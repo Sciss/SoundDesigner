@@ -2,10 +2,11 @@ package de.sciss.connect
 package view
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{Attribute, Sys}
+import de.sciss.synth.proc.Attribute
 import de.sciss.connect.view.impl.{UGenSourceRenderer, BooleanRenderer, ToStringRenderer}
 import prefuse.data.Node
 import de.sciss.synth.UGenSpec
+import de.sciss.lucre.synth.Sys
 
 sealed trait VisualElement /* [S <: Sys[S]] */ {
   //  var name: String = ""

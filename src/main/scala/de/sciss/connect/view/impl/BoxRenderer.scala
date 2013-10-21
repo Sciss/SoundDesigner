@@ -7,7 +7,7 @@ import java.awt.geom.Rectangle2D
 import prefuse.util.ColorLib
 import java.awt._
 import prefuse.visual.VisualItem
-import de.sciss.synth.proc.Sys
+import de.sciss.lucre.synth.Sys
 
 private[impl] object BoxRenderer {
   final val MinBoxWidth         = 24

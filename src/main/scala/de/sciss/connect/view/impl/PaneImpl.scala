@@ -2,7 +2,7 @@ package de.sciss.connect
 package view
 package impl
 
-import de.sciss.synth.proc.{Attribute, Sys}
+import de.sciss.synth.proc.{ExprImplicits, Attribute}
 import prefuse.{Display, Visualization}
 import javax.swing.{JTextField, JComponent}
 import java.awt.event.{ActionListener, ActionEvent, KeyEvent}
@@ -10,7 +10,6 @@ import de.sciss.desktop.KeyStrokes
 import scala.swing.{Component, Action}
 import prefuse.data.Graph
 import de.sciss.lucre.stm
-import de.sciss.synth.expr.ExprImplicits
 import de.sciss.lucre.stm.IdentifierMap
 import java.awt.geom.Point2D
 import prefuse.visual.VisualItem
@@ -18,6 +17,7 @@ import prefuse.render.DefaultRendererFactory
 import prefuse.controls.{ZoomControl, PanControl}
 import java.awt.Rectangle
 import javax.swing.event.{DocumentListener, DocumentEvent}
+import de.sciss.lucre.synth.Sys
 
 // XXX TODO: requires call on EDT; iterate over initial content of patcher; disposal
 object PaneImpl {
@@ -179,38 +179,34 @@ object PaneImpl {
       display.stopEditing()
       editingNode.foreach { vi =>
         editingNode = None
-        getData(vi).foreach { data =>
-          // data.name = txt
-          data match {
-            case vge: VisualIncompleteElement[S] =>
-              vge.value = txt
-              if (vge.value != editingOldText) {
+        getData(vi).foreach {
+          case vge: VisualIncompleteElement[S] =>
+            vge.value = txt
+            if (vge.value != editingOldText) {
 
-                val mp  = new Point2D.Float(vi.getX.toFloat, vi.getY.toFloat)
-                val cue = PutMetaData(mp, edit = false)
+              val mp  = new Point2D.Float(vi.getX.toFloat, vi.getY.toFloat)
+              val cue = PutMetaData(mp, edit = false)
 
-                val success = cursor.step { implicit tx =>
-                  val completeOpt = config.factory(tx)(vge.value)
-                  completeOpt.foreach { complete =>
-                    val incomplete  = vge.source()
-                    val p           = patcher()
-                    p.removeNode(incomplete)
-                    cueMap.put(complete.id, cue)
-                    p.addNode(complete)
-                  }
-                  completeOpt.isDefined
+              val success = cursor.step { implicit tx =>
+                val completeOpt = config.factory(tx)(vge.value)
+                completeOpt.foreach { complete =>
+                  val incomplete  = vge.source()
+                  val p           = patcher()
+                  p.removeNode(incomplete)
+                  cueMap.put(complete.id, cue)
+                  p.addNode(complete)
                 }
-
-                if (!success) {
-                  vge.state   = ElementState.Error
-                  updateEditingBounds(vi)
-                  visualization.repaint()
-                }
+                completeOpt.isDefined
               }
 
-            case _ =>
+              if (!success) {
+                vge.state   = ElementState.Error
+                updateEditingBounds(vi)
+                visualization.repaint()
+              }
+            }
 
-          }
+          case _ =>
         }
       }
     }

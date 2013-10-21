@@ -2,10 +2,11 @@ package de.sciss.connect
 
 import de.sciss.desktop.impl.SwingApplicationImpl
 import de.sciss.desktop.Menu
-import de.sciss.synth.proc.{Attribute, InMemory}
+import de.sciss.synth.proc.{ExprImplicits, Attribute}
 import de.sciss.connect.view.Pane
-import de.sciss.synth.expr.{Ints, Booleans, ExprImplicits}
 import de.sciss.synth.UGenSpec
+import de.sciss.lucre.synth.InMemory
+import de.sciss.lucre.synth.expr.{Booleans, Ints}
 
 object Application extends SwingApplicationImpl("Connect") {
   protected lazy val menuFactory = Menu.Root()

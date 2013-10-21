@@ -4,9 +4,7 @@ package view
 import de.sciss.desktop.impl.WindowImpl
 import de.sciss.desktop
 import desktop.WindowHandler
-import de.sciss.synth.proc.{Sys, InMemory}
-import scala.swing.Component
-import de.sciss.lucre.stm
+import de.sciss.lucre.synth.Sys
 
 class Window[S <: Sys[S]](pane: Pane[S]) extends WindowImpl {
   def handler: WindowHandler = Application.windowHandler

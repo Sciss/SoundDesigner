@@ -11,7 +11,7 @@ import prefuse.util.display.PaintListener
 import prefuse.Display
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.connect.view.{Port, VisualPorts, impl}
-import de.sciss.synth.proc.Sys
+import de.sciss.lucre.synth.Sys
 
 // TODO: add TableListener to react to items disappearing (see original DragControl)
 object DragControl {
