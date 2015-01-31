@@ -1,15 +1,16 @@
 package de.sciss.connect
 package view
 
-import de.sciss.synth.proc.Attribute
-import scala.swing.Component
+import de.sciss.connect.view.impl.{PaneImpl => Impl}
 import de.sciss.lucre.stm
-import impl.{PaneImpl => Impl}
-import language.implicitConversions
 import de.sciss.lucre.synth.Sys
+import de.sciss.synth.proc.Obj
+
+import scala.language.implicitConversions
+import scala.swing.Component
 
 object Pane {
-  type Factory[S <: Sys[S]] = S#Tx => String => Option[Attribute[S]]
+  type Factory[S <: Sys[S]] = S#Tx => String => Option[Obj[S]]
 
   trait ConfigLike[S <: Sys[S]] {
     def factory: Factory[S]

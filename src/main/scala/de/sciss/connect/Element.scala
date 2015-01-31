@@ -1,7 +1,7 @@
 package de.sciss.connect
 
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.synth.proc.Attribute
+import de.sciss.synth.proc.Elem
 import de.sciss.lucre.{event => evt, data}
 
 object Element {
@@ -13,7 +13,7 @@ object Element {
   }
 
   trait Link[S <: evt.Sys[S]] {
-    def targetAttribute: Attribute[S]
+    def targetElem: Elem[S]
     def targetPort     : Int
   }
 }

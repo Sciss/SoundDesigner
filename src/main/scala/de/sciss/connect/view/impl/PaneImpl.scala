@@ -2,22 +2,25 @@ package de.sciss.connect
 package view
 package impl
 
-import de.sciss.synth.proc.{ExprImplicits, Attribute}
-import prefuse.{Display, Visualization}
-import javax.swing.{JTextField, JComponent}
-import java.awt.event.{ActionListener, ActionEvent, KeyEvent}
-import de.sciss.desktop.KeyStrokes
-import scala.swing.{Component, Action}
-import prefuse.data.Graph
+import java.awt.Rectangle
+import java.awt.event.{ActionEvent, ActionListener}
+import java.awt.geom.Point2D
+import javax.swing.event.{DocumentEvent, DocumentListener}
+import javax.swing.{JComponent, JTextField}
+
+import de.sciss.lucre.expr.{Int => IntEx}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.IdentifierMap
-import java.awt.geom.Point2D
-import prefuse.visual.VisualItem
-import prefuse.render.DefaultRendererFactory
-import prefuse.controls.{ZoomControl, PanControl}
-import java.awt.Rectangle
-import javax.swing.event.{DocumentListener, DocumentEvent}
 import de.sciss.lucre.synth.Sys
+import de.sciss.synth.proc._
+import prefuse.controls.{PanControl, ZoomControl}
+import prefuse.data.Graph
+import prefuse.render.DefaultRendererFactory
+import prefuse.visual.VisualItem
+import prefuse.{Display, Visualization}
+
+import scala.swing.event.Key
+import scala.swing.{Action, Component}
 
 // XXX TODO: requires call on EDT; iterate over initial content of patcher; disposal
 object PaneImpl {
@@ -51,7 +54,6 @@ object PaneImpl {
                                         config : Pane.Config[S])
                                        (implicit cursor: stm.Cursor[S]) extends PaneImpl[S] {
     val imp = ExprImplicits[S]
-    import imp._
 
     val visualization = new Visualization
     private val rf = new DefaultRendererFactory(new BoxRenderer(this), new CableRenderer(this))
@@ -65,15 +67,14 @@ object PaneImpl {
       val res   = new Display(visualization)
       val imap  = res.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
       val amap  = res.getActionMap
-      import KeyEvent._
-      import KeyStrokes._
-      imap.put(menu1 + VK_1, "designer.putObject")
+      import de.sciss.desktop.KeyStrokes._
+      imap.put(menu1 + Key.Key1, "designer.putObject")
       amap.put("designer.putObject", Action("putObject") {
-        put(edit = true) { implicit tx => IncompleteElement[S]() }
+        put(edit = true) { implicit tx => Obj(IncompleteElement[S]()) }
       }.peer)
-      imap.put(menu1 + VK_3, "designer.putInt")
+      imap.put(menu1 + Key.Key3, "designer.putInt")
       amap.put("designer.putInt", Action("putInt") {
-        put() { implicit tx => Attribute.Int[S](0) }
+        put() { implicit tx => Obj(IntElem[S](IntEx.newConst(0))) }
       }.peer)
       res
     }
@@ -88,7 +89,7 @@ object PaneImpl {
 
     private def lastMousePoint(): Point2D = dragControl.mousePoint
 
-    private def put(edit: Boolean = false)(elem: S#Tx => Attribute[S]): Unit = {
+    private def put(edit: Boolean = false)(elem: S#Tx => Obj[S]): Unit = {
       val mp  = lastMousePoint()
       mp.setLocation(mp.getX - 2, mp.getY - 2)
       val cue = PutMetaData(mp, edit)
@@ -100,16 +101,17 @@ object PaneImpl {
       }
     }
 
-    def elemAdded(elem: Attribute[S])(implicit tx: S#Tx): Unit = elem match {
-      case a: Attribute.Int[S]      => addVertex(elem, new VisualInt              [S](tx.newHandle(a), a.peer.value))
-      case a: Attribute.Boolean[S]  => addVertex(elem, new VisualBoolean          [S](tx.newHandle(a), a.peer.value))
-      case a: UGenSource[S]         => addVertex(elem, new VisualUGenSource       [S](tx.newHandle(a), a.spec      ))
-      case a: IncompleteElement[S]  => addVertex(elem, new VisualIncompleteElement[S](tx.newHandle(a), a.peer.value))
-      case c: Connection[S]         => addEdge(c)
+    def elemAdded(elem: Obj[S])(implicit tx: S#Tx): Unit = elem match {
+      case IntElem.Obj(a)           => addVertex(elem, new VisualInt              [S](tx.newHandle(a), a.elem.peer.value))
+      case BooleanElem.Obj(a)       => addVertex(elem, new VisualBoolean          [S](tx.newHandle(a), a.elem.peer.value))
+      case UGenSource.Obj(a)        => addVertex(elem, new VisualUGenSource       [S](tx.newHandle(a), a.elem.spec      ))
+      case IncompleteElement.Obj(a) => addVertex(elem, new VisualIncompleteElement[S](tx.newHandle(a), a.elem.peer.value))
+      case Connection.Obj(a)        => addEdge(a)
       case _                        => // ignore
     }
 
-    private def addEdge(c: Connection[S])(implicit tx: S#Tx): Unit = {
+    private def addEdge(cObj: Connection.Obj[S])(implicit tx: S#Tx): Unit = {
+      val c = cObj.elem
       // println(s"addEdge($c")
       for {
         sourceData <- viewMap.get(c.source._1.id)
@@ -127,7 +129,7 @@ object PaneImpl {
       }
     }
 
-    private def addVertex(elem: Attribute[S], data: VisualBox[S])(implicit tx: S#Tx): Unit = {
+    private def addVertex(elem: Obj[S], data: VisualBox[S])(implicit tx: S#Tx): Unit = {
       viewMap.put(elem.id, data)
       val cueOpt = cueMap.get(elem.id)
       if (cueOpt.nonEmpty) cueMap.remove(elem.id)
@@ -149,7 +151,7 @@ object PaneImpl {
       }
     }
 
-    def elemRemoved(elem: Attribute[S])(implicit tx: S#Tx): Unit = {
+    def elemRemoved(elem: Obj[S])(implicit tx: S#Tx): Unit = {
       val dataOpt = viewMap.get(elem.id)
       cueMap.remove(elem.id)
 
@@ -208,7 +210,7 @@ object PaneImpl {
         val sinkArt   = sink  .source()
         val sourceLet = out.idx
         val sinkLet   = in .idx
-        val conn      = Connection.apply(source = (sourceArt, sourceLet), sink = (sinkArt, sinkLet))
+        val conn      = Obj(Connection.apply(source = (sourceArt, sourceLet), sink = (sinkArt, sinkLet)))
         val p         = patcher()
         p.addNode(conn)
       }

@@ -2,8 +2,8 @@ package de.sciss.connect
 package sound
 package impl
 
-import de.sciss.synth.proc.{Attribute, AuralSystem}
-import de.sciss.lucre.synth.{Synth, Server, Sys}
+import de.sciss.synth.proc._
+import de.sciss.lucre.synth.{Txn, Synth, Server, Sys}
 import de.sciss.lucre.stm
 import de.sciss.synth.UGenSpec
 import scala.concurrent.stm.Ref
@@ -28,9 +28,10 @@ object AuralPresentationImpl {
                                        (implicit cursor: stm.Cursor[S])
     extends AuralPresentation[S] with AuralSystem.Client {
 
-    def stopped() = ()
+    def auralStarted(s: Server)(implicit tx: Txn): Unit =
+      tx.afterCommit(cursor.step { implicit tx => startedTx(s) })
 
-    def started(s: Server): Unit = cursor.step { implicit tx => startedTx(s) }
+    def auralStopped()(implicit tx: Txn): Unit = ()
 
     def startedTx(s: Server)(implicit tx: S#Tx): Unit = {
       val patch   = patchH()
@@ -45,25 +46,26 @@ object AuralPresentationImpl {
         }
       }}
 
-      def addElem(elem: Attribute[S])(implicit tx: S#Tx): Unit = elem match {
+      def addElem(elem: Obj[S])(implicit tx: S#Tx): Unit = elem match {
         case a: UGenSource[S] =>
           val aural = new AuralUGen(a.spec)
           viewMap.put(a.id, aural)
           checkRun(aural)
 
-        case a: Attribute.Int[S] =>
-        case a: Attribute.Boolean[S] =>
-        case a: Connection[S] =>
+        case a: IntElem    [S] =>
+        case a: BooleanElem[S] =>
+        case a: Connection [S] =>
         case _ =>
       }
 
-      def removeElem(elem: Attribute[S])(implicit tx: S#Tx): Unit = {
+      def removeElem(elem: Obj[S])(implicit tx: S#Tx): Unit = {
       }
 
       def checkRun(aural: AuralUGen)(implicit tx: S#Tx): Unit = {
-        val ports = aural.ports()
+        implicit val itx = tx.peer
+        // val ports = aural.ports()
         val spec  = aural.spec
-        spec.inputs
+        // spec.inputs
         aural.spec.args.foreach { arg =>
           // name: String, tpe: UGenSpec.ArgumentType, defaults: Map[MaybeRate, UGenSpec.ArgumentValue],
           // rates: Map[MaybeRate, RateConstraint]

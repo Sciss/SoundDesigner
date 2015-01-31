@@ -1,21 +1,20 @@
 package de.sciss.connect
 package impl
 
-import de.sciss.synth.proc.Attribute
+import de.sciss.synth.proc.{Obj, Elem}
 import de.sciss.serial
 import de.sciss.lucre.{event => evt, data, expr}
 import serial.{DataInput, DataOutput}
-import expr.LinkedList
 import de.sciss.lucre.synth.{InMemory, Sys}
 
 object PatcherImpl {
   // private type Map[S <: Sys[S]] = data.SkipList.Map[S, Int, List[NodeChanged[S]]]
-  private type LL[S <: Sys[S]] = LinkedList.Modifiable[S, Attribute[S], Attribute.Update[S]]
+  private type LL[S <: Sys[S]] = expr.List.Modifiable[S, Obj[S], Obj.Update[S]]
 
   def apply[S <: Sys[S]](implicit tx: S#Tx): Patcher[S] = {
     val targets = evt.Targets[S]
     // val map     = data.SkipList.Map.empty[S, Int, List[NodeChanged[S]]]
-    val list = expr.LinkedList.Modifiable[S, Attribute[S], Attribute.Update[S]](_.changed)
+    val list = expr.List.Modifiable[S, Obj[S], Obj.Update[S]]
     new Impl[S](targets, list)
   }
 
@@ -25,7 +24,7 @@ object PatcherImpl {
 
   private final class Ser[S <: Sys[S]] extends evt.NodeSerializer[S, Patcher[S]] {
     def read(in: DataInput, access: S#Acc, targets: evt.Targets[S])(implicit tx: S#Tx): Patcher[S] = {
-      val list = expr.LinkedList.Modifiable.read[S, Attribute[S], Attribute.Update[S]](_.changed)(in, access)
+      val list = expr.List.Modifiable.read[S, Obj[S], Obj.Update[S]](in, access)
       new Impl[S](targets, list)
     }
   }
@@ -42,17 +41,17 @@ object PatcherImpl {
     def connect   ()(implicit tx: S#Tx): Unit = list.changed ---> this
     def disconnect()(implicit tx: S#Tx): Unit = list.changed -/-> this
 
-    def nodeIterator(implicit tx: S#Tx): data.Iterator[S#Tx, Attribute[S]] = list.iterator
+    def nodeIterator(implicit tx: S#Tx): data.Iterator[S#Tx, Obj[S]] = list.iterator
 
-    def addNode   (elem: Attribute[S])(implicit tx: S#Tx): Unit    = list.addLast(elem)
-    def removeNode(elem: Attribute[S])(implicit tx: S#Tx): Boolean = list.remove (elem)
+    def addNode   (elem: Obj[S])(implicit tx: S#Tx): Unit    = list.addLast(elem)
+    def removeNode(elem: Obj[S])(implicit tx: S#Tx): Boolean = list.remove (elem)
 
     def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Patcher.Update[S]] =
       pull(list.changed).map { ll =>
         val ch = ll.changes.map {
-          case LinkedList.Added  (idx, elem)        => Patcher.NodeAdded  (elem)
-          case LinkedList.Removed(idx, elem)        => Patcher.NodeRemoved(elem)
-          case LinkedList.Element(elem, elemUpdate) => Patcher.NodeChanged(elem, elemUpdate)
+          case expr.List.Added  (idx, elem)        => Patcher.NodeAdded  (elem)
+          case expr.List.Removed(idx, elem)        => Patcher.NodeRemoved(elem)
+          case expr.List.Element(elem, elemUpdate) => Patcher.NodeChanged(elem, elemUpdate)
         }
         Patcher.Update(patcher, ch)
       }

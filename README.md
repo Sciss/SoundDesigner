@@ -1,8 +1,10 @@
 # SoundDesigner
 
-A interactive GUI sound design component developed during the [SysSon Project](http://sysson.kug.ac.at/) at IEM Graz &ndash; SysSon is a systematic procedure to develop sonifications. Published under the GNU General Public License v2+.
+An interactive GUI sound design component. Currently in pre-alpha stage.
+
+(C)opyright 2013&ndash;2015 Hanns Holger Rutz. All rights reserved. Published under the GNU General Public License v2+.
 
 ## Installation
 
-The project is written in [Scala](http://www.scala-lang.org/) 2.10 and builds with the [Simple Build Bool](http://www.scala-sbt.org/) (sbt) 0.12.
+The project is written in [Scala](http://www.scala-lang.org/) 2.11, 2.10 and builds with [sbt](http://www.scala-sbt.org/) 0.13.
 

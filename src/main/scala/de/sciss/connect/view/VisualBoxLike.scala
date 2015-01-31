@@ -1,12 +1,12 @@
 package de.sciss.connect
 package view
 
+import de.sciss.connect.view.impl.{BooleanRenderer, ToStringRenderer, UGenSourceRenderer}
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.Attribute
-import de.sciss.connect.view.impl.{UGenSourceRenderer, BooleanRenderer, ToStringRenderer}
-import prefuse.data.Node
-import de.sciss.synth.UGenSpec
 import de.sciss.lucre.synth.Sys
+import de.sciss.synth.UGenSpec
+import de.sciss.synth.proc.{BooleanElem, IntElem, Obj}
+import prefuse.data.Node
 
 sealed trait VisualBoxLike /* [S <: Sys[S]] */ {
   //  var name: String = ""
@@ -35,7 +35,7 @@ sealed trait VisualBoxLike /* [S <: Sys[S]] */ {
 }
 
 sealed trait VisualBox[S <: Sys[S]] extends VisualBoxLike {
-  def source: stm.Source[S#Tx, Attribute[S]]
+  def source: stm.Source[S#Tx, Obj[S]]
 }
 
 //object VisualProduct {
@@ -49,7 +49,7 @@ sealed trait VisualBox[S <: Sys[S]] extends VisualBoxLike {
 //  def renderer: ElementRenderer = ???
 //}
 
-class VisualUGenSource[S <: Sys[S]](val source: stm.Source[S#Tx, UGenSource[S]], spec: UGenSpec)
+class VisualUGenSource[S <: Sys[S]](val source: stm.Source[S#Tx, UGenSource.Obj[S]], spec: UGenSpec)
   extends VisualBox[S] {
 
   def value = spec
@@ -59,7 +59,7 @@ class VisualUGenSource[S <: Sys[S]](val source: stm.Source[S#Tx, UGenSource[S]],
   def renderer: ElementRenderer = UGenSourceRenderer
 }
 
-class VisualIncompleteElement[S <: Sys[S]](val source: stm.Source[S#Tx, IncompleteElement[S]], var value: String)
+class VisualIncompleteElement[S <: Sys[S]](val source: stm.Source[S#Tx, IncompleteElement.Obj[S]], var value: String)
   extends VisualBox[S] {
 
   override def defaultState = ElementState.Edit
@@ -69,7 +69,7 @@ class VisualIncompleteElement[S <: Sys[S]](val source: stm.Source[S#Tx, Incomple
   def renderer: ElementRenderer = ToStringRenderer
 }
 
-class VisualInt[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Int[S]], var value: Int)
+class VisualInt[S <: Sys[S]](val source: stm.Source[S#Tx, IntElem.Obj[S]], var value: Int)
   extends VisualBox[S] {
 
   val ports = VisualPorts(numIns = 0, numOuts = 1)
@@ -77,7 +77,7 @@ class VisualInt[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Int[S]], var
   def renderer: ElementRenderer = ToStringRenderer
 }
 
-class VisualBoolean[S <: Sys[S]](val source: stm.Source[S#Tx, Attribute.Boolean[S]], var value: Boolean)
+class VisualBoolean[S <: Sys[S]](val source: stm.Source[S#Tx, BooleanElem.Obj[S]], var value: Boolean)
   extends VisualBox[S] {
 
   val ports = VisualPorts(numIns = 0, numOuts = 1)

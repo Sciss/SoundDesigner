@@ -1,10 +1,8 @@
-import AssemblyKeys._
-
 name          := "SoundDesigner"
 
-version       := "0.1.0-SNAPSHOT"
+version       := "0.2.0-SNAPSHOT"
 
-organization  := "at.iem.sysson"
+organization  := "de.sciss"
 
 description   := "Interactive Sound Design Tool"
 
@@ -14,20 +12,18 @@ licenses      := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt")
 
 // ---- scala compiler settings and libraries ----
 
-scalaVersion  := "2.10.3"
+scalaVersion  := "2.11.5"
+
+crossScalaVersions := Seq("2.11.5", "2.10.4")
 
 libraryDependencies ++= Seq(
-  // "de.sciss" %% "lucresynth"              % "2.0.+",
-  "de.sciss" %% "soundprocesses"          % "2.0.+",
-  // "de.sciss" %% "scalacollider"           % "1.10.+",         // client for SuperCollider
-  "de.sciss" %% "scalacolliderswing"      % "1.10.+",         // some graphical features for ScalaCollider
-  "de.sciss" %  "scalacolliderugens-spec" % "1.7.1+",         // UGen specs used in the patcher class
-  "de.sciss" %% "desktop"                 % "0.3.2+"          // application framework
+  "de.sciss" %% "soundprocesses"          % "2.14.1",
+  "de.sciss" %% "scalacolliderswing"      % "1.24.0",         // some graphical features for ScalaCollider
+  "de.sciss" %  "scalacolliderugens-spec" % "1.13.1",         // UGen specs used in the patcher class
+  "de.sciss" %% "desktop"                 % "0.6.0"           // application framework
 )
 
-retrieveManaged := true
-
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
+scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xfuture", "-encoding", "utf8")
 
 // ---- runtime settings ----
 
@@ -38,25 +34,12 @@ import Ops._
 import de.sciss.osc.Implicits._
 """
 
-// ---- build info source generator ----
-
-buildInfoSettings
-
-sourceGenerators in Compile <+= buildInfo
-
-buildInfoKeys := Seq(name, organization, version, scalaVersion, description,
-  BuildInfoKey.map(homepage) { case (k, opt) => k -> opt.get },
-  BuildInfoKey.map(licenses) { case (_, Seq((lic, _))) => "license" -> lic }
-)
-
-buildInfoPackage := organization.value
-
 // ---- publishing ----
 
 publishMavenStyle := true
 
 publishTo :=
-  Some(if (version.value endsWith "-SNAPSHOT")
+  Some(if (isSnapshot.value)
     "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
   else
     "Sonatype Releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
@@ -68,8 +51,8 @@ pomIncludeRepository := { _ => false }
 
 pomExtra := { val n = name.value
 <scm>
-  <url>git@github.com:iem-projects/{n}.git</url>
-  <connection>scm:git:git@github.com:iem-projects/{n}.git</connection>
+  <url>git@github.com:Sciss/{n}.git</url>
+  <connection>scm:git:git@github.com:Sciss/{n}.git</connection>
 </scm>
 <developers>
   <developer>
@@ -82,25 +65,7 @@ pomExtra := { val n = name.value
 
 // ---- packaging (making standalones) ----
 
-// windows/linux
-
-seq(assemblySettings: _*)
-
 test in assembly := ()
 
 target in assembly := baseDirectory.value    // make .jar file in the main directory
 
-// mac os x
-
-seq(appbundle.settings: _*)
-
-// appbundle.icon <<= (resourceDirectory in Compile, organization) { case (par, org) =>
-//   val icn = org.split('.').foldLeft(par)(_ / _) / "icon512.png"
-//   Some(icn)
-// }
-
-// appbundle.mainClass := Some("at.iem.sysson.sound.designer.Application")
-
-appbundle.javaOptions += "-Xmx2048m"
-
-appbundle.target := baseDirectory.value      // make .app bundle in the main directory

@@ -12,7 +12,7 @@ package object view {
   //   private lazy val primaryMod   = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
 
   private def handleGUI(seq: Vec[() => Unit]): Unit = {
-    def exec() {
+    def exec(): Unit =
       seq.foreach { fun =>
         try {
           fun()
@@ -20,7 +20,7 @@ package object view {
           case NonFatal(e) => e.printStackTrace()
         }
       }
-    }
+
     execInGUI(exec())
   }
 
@@ -33,7 +33,7 @@ package object view {
       code
     else
       EventQueue.invokeLater(new Runnable {
-        def run() { code }
+        def run(): Unit = code
       })
   }
 

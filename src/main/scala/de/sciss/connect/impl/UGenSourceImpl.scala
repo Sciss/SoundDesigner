@@ -2,17 +2,20 @@ package de.sciss
 package connect
 package impl
 
+import de.sciss.lucre.event.Sys
 import de.sciss.lucre.{event => evt}
-import de.sciss.serial.{DataOutput, DataInput}
-import synth.proc.impl.AttributeImpl
+import de.sciss.serial.{DataInput, DataOutput}
 import de.sciss.synth.UGenSpec
-import de.sciss.synth.proc.Attribute
-import de.sciss.synth.proc.Attribute.Update
+import de.sciss.synth.proc.Elem
+import de.sciss.synth.proc.Elem.Update
+import de.sciss.synth.proc.impl.ElemCompanionImpl
 
-object UGenSourceImpl extends AttributeImpl.Companion[UGenSource] {
+object UGenSourceImpl extends ElemCompanionImpl[UGenSource] {
   final val typeID = 18
 
   // type _Peer[S <: evt.Sys[S]] = S#Var[Option[_UGenSource[_]]]
+
+  def readIdentifiedConstant[S <: Sys[S]](in: DataInput)(implicit tx: S#Tx): UGenSource[S] = ???
 
   def readIdentified[S <: evt.Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S])
                                      (implicit tx: S#Tx): UGenSource[S] with evt.Node[S] = {
@@ -27,12 +30,12 @@ object UGenSourceImpl extends AttributeImpl.Companion[UGenSource] {
 
   private final class Impl[S <: evt.Sys[S]](val targets: evt.Targets[S],
                                             val spec: UGenSpec)
-    extends Attribute[S] with evt.Node[S] with UGenSource[S] {
+    extends Elem[S] with evt.Node[S] with UGenSource[S] {
 
     def typeID = UGenSourceImpl.typeID
     def prefix = "UGenSource"
 
-    def peer = this
+    val peer = ()
 
     // protected def peerEvent = evt.Dummy[S, Any, UGenSource[S]]
 
@@ -47,6 +50,6 @@ object UGenSourceImpl extends AttributeImpl.Companion[UGenSource] {
 
     def select(slot: Int) = sys.error("Not an actual Node") // XXX TODO ugly
 
-    def changed = evt.Dummy[S, Update[S]]
+    def changed = evt.Dummy[S, Update[S, Unit]]
   }
 }
