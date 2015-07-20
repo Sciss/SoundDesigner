@@ -27,4 +27,6 @@ trait Connection[S <: evt.Sys[S]] extends Elem[S] {
 
   type Peer       = Unit
   type PeerUpdate = Unit  // XXX  TODO
+
+  type This = Connection[S]
 }

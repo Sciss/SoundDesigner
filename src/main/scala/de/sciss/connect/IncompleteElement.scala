@@ -26,5 +26,5 @@ trait IncompleteElement[S <: evt.Sys[S]] extends Elem[S] {
   type Peer       = Expr.Var[S, String]
   type PeerUpdate = Change[String]
 
-  def mkCopy()(implicit tx: S#Tx): IncompleteElement[S]
+  type This = IncompleteElement[S]
 }

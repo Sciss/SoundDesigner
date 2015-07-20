@@ -28,7 +28,7 @@ trait UGenSource[S <: evt.Sys[S]] extends Elem[S] {
   type Peer       = Unit
   type PeerUpdate = Unit  // XXX TODO
 
-  def spec: UGenSpec
+  type This = UGenSource[S]
 
-  def mkCopy()(implicit tx: S#Tx): UGenSource[S]
+  def spec: UGenSpec
 }

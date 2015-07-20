@@ -12,15 +12,15 @@ licenses      := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt")
 
 // ---- scala compiler settings and libraries ----
 
-scalaVersion  := "2.11.5"
+scalaVersion  := "2.11.7"
 
-crossScalaVersions := Seq("2.11.5", "2.10.4")
+crossScalaVersions := Seq("2.11.7", "2.10.5")
 
 libraryDependencies ++= Seq(
-  "de.sciss" %% "soundprocesses"          % "2.14.1",
-  "de.sciss" %% "scalacolliderswing"      % "1.24.0",         // some graphical features for ScalaCollider
-  "de.sciss" %  "scalacolliderugens-spec" % "1.13.1",         // UGen specs used in the patcher class
-  "de.sciss" %% "desktop"                 % "0.6.0"           // application framework
+  "de.sciss" %% "soundprocesses"          % "2.21.1",
+  "de.sciss" %% "scalacolliderswing"      % "1.25.2",         // some graphical features for ScalaCollider
+  "de.sciss" %  "scalacolliderugens-spec" % "1.13.3",         // UGen specs used in the patcher class
+  "de.sciss" %% "desktop"                 % "0.7.1"           // application framework
 )
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xfuture", "-encoding", "utf8")
